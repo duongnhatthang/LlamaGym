@@ -9,6 +9,12 @@ from trl import (
     create_reference_model,
 )
 
+import os
+import json
+from datetime import datetime
+from typing import List, Dict
+
+
 
 class Agent(ABC):
     def __init__(
@@ -55,10 +61,13 @@ class Agent(ABC):
     def extract_action(self, response: str) -> gym.core.ActType:
         pass
 
+
     def llm(self, messages: List[Dict[str, str]]) -> str:
+        # Prepare the prompt
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
+
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         generate_ids = self.model.generate(
             inputs=inputs.input_ids,
@@ -71,6 +80,37 @@ class Agent(ABC):
             generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
         response = outputs[0].split("[/INST]")[-1].strip()
+
+        # Prepare the log data with timestamp
+        log_data = {
+            "prompt": prompt,
+            "outputs": outputs,
+            "response": response,
+        }
+
+        # Create the 'exp' directory if it doesn't exist
+        base_dir = "exp"
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+
+        # Create a subfolder for the current date
+        date_dir = os.path.join(base_dir, datetime.now().strftime("%Y-%m-%d"))
+        os.makedirs(date_dir, exist_ok=True)
+
+        # Path to the log file
+        log_file = os.path.join(date_dir, "log.json")
+
+        # Write data to JSON (append if exists)
+        if os.path.exists(log_file):
+            with open(log_file, "r") as f:
+                existing_data = json.load(f)
+        else:
+            existing_data = []
+
+        existing_data.append(log_data)
+
+        with open(log_file, "w") as f:
+            json.dump(existing_data, f, indent=4)
 
         return response
 
