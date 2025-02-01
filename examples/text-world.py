@@ -45,7 +45,7 @@ if __name__ == "__main__":
         "generate/temperature": 0.9,
     }
     wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
-    device = "cuda:0"
+    device = "cuda"
     HF_TOKEN = os.environ.get("HF_TOKEN")
 
     lora_config = LoraConfig(
