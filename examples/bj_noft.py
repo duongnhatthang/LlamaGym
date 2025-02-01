@@ -7,8 +7,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import gymnasium as gym
 from llamagym.inf_agent import InferenceAgent
 
-# examples/bj_noft.py
-class BlackjackAgent(InferenceAgent):
+class InfBlackjackAgent(InferenceAgent):
     def get_system_prompt(self) -> str:
         return """You are an expert blackjack player. Every turn, you'll see your current sum, the dealer's showing card value, and whether you have a usable ace. Win by exceeding the dealer's hand but not exceeding 21.
 Decide whether to stay with your current sum by writing "Action: 0" or accept another card by writing "Action: 1". Accept a card unless very close to 21."""
@@ -40,7 +39,7 @@ if __name__ == "__main__":
         "model_name": "meta-llama/Llama-2-7b-chat-hf",
         "env": "Blackjack-v1",
         "batch_size": 1,
-        "episodes": 5000,
+        "episodes": 1000,
         "generate/max_new_tokens": 32,
     }
 
@@ -58,7 +57,7 @@ if __name__ == "__main__":
     model.resize_token_embeddings(len(tokenizer))
 
     # [TODO] MING: Fix the error: Remove unnecessary empty dicts (only pass generate config)
-    agent = BlackjackAgent(model, tokenizer, device, {
+    agent = InfBlackjackAgent(model, tokenizer, device, {
         "max_new_tokens": 32,
         "do_sample": True,
         "top_p": 0.6,
@@ -70,6 +69,7 @@ if __name__ == "__main__":
 
     for episode in trange(hyperparams["episodes"]):
         observation, info = env.reset()
+        agent.terminate_episode() # MING: reset the agent's state
         done = False
         total_reward = 0
 
