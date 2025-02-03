@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # W&B stuff here
     wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = "cuda:1" if torch.cuda.is_available() else "cpu"
     HF_TOKEN = os.environ.get("HF_TOKEN")
 
     # Model & Tokenizer
@@ -72,11 +72,12 @@ if __name__ == "__main__":
     )
     env = gym.make(hyperparams["env"], natural=False, sab=False)
 
+
+    total_reward = 0
     # Inference Loop (No PPO, No Fine-tuning)
     for episode in trange(hyperparams["episodes"]):
         observation, info = env.reset()
         done = False
-        total_reward = 0
         steps = 0
 
         while not done:
@@ -95,5 +96,7 @@ if __name__ == "__main__":
 
         train_stats = agent.terminate_episode(train=False)  # [TODO] !! reset after each episode. @Thang, plz check the reset message here.
         episode_stats.update(train_stats)
+
+        print("AAA", total_reward)
 
         wandb.log(episode_stats)
