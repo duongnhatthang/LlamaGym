@@ -1,55 +1,44 @@
 from collections import Counter
 from llamagym import Agent
 import gymnasium as gym
+import re
 import torch
-from trl import (
-    PPOTrainer,
-    PPOConfig,
-    create_reference_model,
-)
 
 
 class MajorityVoteAgent(Agent):
-    def __init__(
-        self,
-        model,
-        tokenizer,
-        device,
-        generate_config_dict=None,
-        ppo_config_dict=None,
-        num_votes=10
-    ):
-        super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict)
+    def __init__(self, model, tokenizer, device, generate_config_dict=None, num_votes=5):
+        #  Initialize Without PPO
+        self.model = model
+        self.tokenizer = tokenizer
+        self.device = device
+        self.generate_config_dict = generate_config_dict or {
+            "max_new_tokens": 32,
+            "do_sample": True,
+            "top_p": 0.6,
+            "top_k": 0,
+            "temperature": 0.9,
+        }
         self.num_votes = num_votes
-
-    def get_system_prompt(self) -> str:
-        return "You are an intelligent agent designed to solve tasks optimally."
-
-    def format_observation(self, observation: gym.core.ObsType) -> str:
-        return f"Observation: {observation}"
-
-    def extract_action(self, response: str) -> gym.core.ActType:
-        if "Action:" in response:
-            return response.split("Action:")[-1].strip()
-        raise ValueError("No valid action found in response.")
+        self.current_episode_messages = [{"role": "system", "content": self.get_system_prompt()}]
 
     def act(self, observation):
         message = self.format_observation(observation)
         self.current_episode_messages.append({"role": "user", "content": message})
 
-        responses = []
-        actions = []
+        responses, actions = [], []
         for _ in range(self.num_votes):
             response = self.llm(self.current_episode_messages)
             action = self.extract_action(response)
-            print(actions)
             responses.append(response)
+            print(f"Acting...{_}: {action}" )
             actions.append(action)
 
-        # Majority voting
+        # Majority Vote
         action_counts = Counter(actions)
         majority_action, _ = action_counts.most_common(1)[0]
-        majority_response = next(response for response, action in zip(responses, actions) if action == majority_action)
-        self.current_episode_messages.append({"role": "assistant", "content": majority_response})
+        majority_response = next(
+            response for response, action in zip(responses, actions) if action == majority_action
+        )
 
+        self.current_episode_messages.append({"role": "assistant", "content": majority_response})
         return majority_action
