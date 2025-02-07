@@ -96,7 +96,5 @@ if __name__ == "__main__":
 
         train_stats = agent.terminate_episode(train=False)  # [TODO] !! reset after each episode. @Thang, plz check the reset message here.
         episode_stats.update(train_stats)
-
-        print("AAA", total_reward)
-
+        print(f"Episode {episode}: Total Reward: {total_reward}, Steps: {steps}")
         wandb.log(episode_stats)

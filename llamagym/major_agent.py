@@ -7,7 +7,7 @@ import torch
 
 class MajorityVoteAgent(Agent):
     def __init__(self, model, tokenizer, device, generate_config_dict=None, num_votes=1):
-        #  Initialize Without PPO
+        super().__init__()  # Init
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
@@ -30,7 +30,6 @@ class MajorityVoteAgent(Agent):
             response = self.llm(self.current_episode_messages)
             action = self.extract_action(response)
             responses.append(response)
-            # print(f"Acting...{_}: {action}" )
             actions.append(action)
 
         # Majority Vote

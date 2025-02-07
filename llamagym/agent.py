@@ -59,7 +59,6 @@ class Agent(ABC):
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         generate_ids = self.model.generate(
@@ -74,13 +73,6 @@ class Agent(ABC):
         )
 
         response = outputs[0].split("[/INST]")[-1].strip()
-        
-        if self.extract_action(response) ==1: 
-            print("Question: \n",prompt)
-            print("\nMODELOUTPUTS\n",outputs[0])
-            print("\nRESPONSE\n",response)
-            print("----------------------------\n")
-
         return response
 
     def act(self, observation):
