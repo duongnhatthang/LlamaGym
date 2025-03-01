@@ -25,7 +25,8 @@ TensorBatch = List[torch.Tensor]
 class TrainConfig:
     # Experiment
     device: str = "cuda"
-    env: str = "halfcheetah-medium-expert-v2"  # OpenAI gym environment name
+    # env: str = "halfcheetah-medium-expert-v2"  # OpenAI gym environment name
+    env: str = "Blackjack-v1"  # OpenAI gym environment name
     seed: int = 0  # Sets Gym, PyTorch and Numpy seeds
     eval_freq: int = int(5e3)  # How often (time steps) we evaluate
     n_episodes: int = 10  # How many episodes run during evaluation
@@ -424,6 +425,68 @@ class FullyConnectedQFunction(nn.Module):
             q_values = q_values.reshape(batch_size, -1)
         return q_values
 
+class DiscretePolicy(nn.Module):
+    def __init__(self, state_dim, num_actions, orthogonal_init=False):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_actions),
+        )
+        if orthogonal_init:
+            for layer in self.net:
+                if isinstance(layer, nn.Linear):
+                    nn.init.orthogonal_(layer.weight, gain=1.0)
+                    nn.init.constant_(layer.bias, 0.0)
+
+    def forward(self, observations):
+        logits = self.net(observations)
+        return logits
+
+    def log_prob(self, observations, actions):
+        logits = self(observations)
+        log_probs = F.log_softmax(logits, dim=-1)
+        return log_probs.gather(1, actions.long())
+
+    def sample(self, observations):
+        logits = self(observations)
+        probs = F.softmax(logits, dim=-1)
+        action = torch.multinomial(probs, num_samples=1)  # Returns [batch_size, 1]
+        log_prob = F.log_softmax(logits, dim=-1).gather(1, action)
+        return action, log_prob
+
+    @torch.no_grad()
+    def act(self, state, device):
+        state = torch.tensor(state.reshape(1, -1), device=device, dtype=torch.float32)
+        logits = self(state)
+        action = torch.argmax(logits, dim=-1, keepdim=True)
+        return action.item()
+
+class DiscreteQFunction(nn.Module):
+    def __init__(self, state_dim, num_actions, orthogonal_init=False):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_actions),
+        )
+        if orthogonal_init:
+            for layer in self.net:
+                if isinstance(layer, nn.Linear):
+                    nn.init.orthogonal_(layer.weight, gain=1.0)
+                    nn.init.constant_(layer.bias, 0.0)
+
+    def forward(self, observations):
+        return self.net(observations)
+
 
 class Scalar(nn.Module):
     def __init__(self, init_value: float):
@@ -434,7 +497,7 @@ class Scalar(nn.Module):
         return self.constant
 
 
-class ContinuousCQL:
+class CQL:
     def __init__(
         self,
         critic_1,
@@ -451,7 +514,7 @@ class ContinuousCQL:
         policy_lr: bool = 3e-4,
         qf_lr: bool = 3e-4,
         soft_target_update_rate: float = 5e-3,
-        bc_steps=100000,
+        bc_steps=100,
         target_update_period: int = 1,
         cql_n_actions: int = 10,
         cql_importance_sample: bool = True,
@@ -463,7 +526,11 @@ class ContinuousCQL:
         cql_clip_diff_min: float = -np.inf,
         cql_clip_diff_max: float = np.inf,
         device: str = "cpu",
+        is_discrete: bool = False,
+        num_actions: int = None,
     ):
+        self.is_discrete = is_discrete
+        self.num_actions = num_actions
         super().__init__()
 
         self.discount = discount
@@ -541,15 +608,28 @@ class ContinuousCQL:
         alpha: torch.Tensor,
         log_pi: torch.Tensor,
     ) -> torch.Tensor:
-        if self.total_it <= self.bc_steps:
-            log_probs = self.actor.log_prob(observations, actions)
-            policy_loss = (alpha * log_pi - log_probs).mean()
+        if self.is_discrete:
+            if self.total_it <= self.bc_steps:
+                log_probs = self.actor.log_prob(observations, actions)
+                policy_loss = -log_probs.mean() #Thang: from Grok 3: alpha * log_pi is a regularization term to encourage exploration, helpful for continuous setting, maybe redundancy in the discrete setting. Still, use in the online phase??? Grok 3 said it's similar to SAC
+            else:
+                Q1_values = self.critic_1(observations)  # Shape [batch_size, num_actions]
+                Q2_values = self.critic_2(observations)
+                q_new_actions = torch.min(
+                    Q1_values.gather(1, new_actions),  # new_actions: [batch_size, 1]
+                    Q2_values.gather(1, new_actions),
+                ).squeeze(-1)  # Result: [batch_size]
+                policy_loss = (alpha * log_pi.squeeze(-1) - q_new_actions).mean()
         else:
-            q_new_actions = torch.min(
-                self.critic_1(observations, new_actions),
-                self.critic_2(observations, new_actions),
-            )
-            policy_loss = (alpha * log_pi - q_new_actions).mean()
+            if self.total_it <= self.bc_steps:
+                log_probs = self.actor.log_prob(observations, actions)
+                policy_loss = (alpha * log_pi - log_probs).mean()
+            else:
+                q_new_actions = torch.min(
+                    self.critic_1(observations, new_actions),
+                    self.critic_2(observations, new_actions),
+                )
+                policy_loss = (alpha * log_pi - q_new_actions).mean()
         return policy_loss
 
     def _q_loss(
@@ -562,148 +642,194 @@ class ContinuousCQL:
         alpha: torch.Tensor,
         log_dict: Dict,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        q1_predicted = self.critic_1(observations, actions)
-        q2_predicted = self.critic_2(observations, actions)
+        if self.is_discrete:
+            # Predicted Q-values for the taken actions (discrete case)
+            q1_predicted = self.critic_1(observations).gather(1, actions.long())
+            q2_predicted = self.critic_2(observations).gather(1, actions.long())
 
-        if self.cql_max_target_backup:
-            new_next_actions, next_log_pi = self.actor(
-                next_observations, repeat=self.cql_n_actions
-            )
-            target_q_values, max_target_indices = torch.max(
-                torch.min(
+            # Target Q-values: min over critics, max over actions for next state
+            with torch.no_grad():
+                target_q_values = torch.min(
+                    self.target_critic_1(next_observations),
+                    self.target_critic_2(next_observations),
+                ).max(dim=1)[0] #Thang: dim here is different from the continuous case below (-1)
+
+            target_q_values = target_q_values.unsqueeze(-1)
+            # Compute TD target
+            td_target = rewards + (1.0 - dones) * self.discount * target_q_values
+
+            # MSE loss for Q-functions
+            qf1_loss = F.mse_loss(q1_predicted, td_target.detach())
+            qf2_loss = F.mse_loss(q2_predicted, td_target.detach())
+
+            # CQL Penalty for discrete actions
+            Q1_values = self.critic_1(observations)# Shape: (batch_size, num_actions)
+            Q2_values = self.critic_2(observations)# Shape: (batch_size, num_actions)
+
+            # Compute logsumexp over actions to approximate max Q-value
+            cql_qf1_ood = torch.logsumexp(Q1_values / self.cql_temp, dim=1) * self.cql_temp
+            cql_qf2_ood = torch.logsumexp(Q2_values / self.cql_temp, dim=1) * self.cql_temp
+
+            # Compute CQL penalty
+            cql_qf1_diff = torch.clamp(cql_qf1_ood - q1_predicted, self.cql_clip_diff_min, self.cql_clip_diff_max).mean()
+            cql_qf2_diff = torch.clamp(cql_qf2_ood - q2_predicted, self.cql_clip_diff_min, self.cql_clip_diff_max).mean()
+
+            # Apply CQL regularization with optional Lagrange multiplier
+            if self.cql_lagrange:
+                alpha_prime = torch.clamp(torch.exp(self.log_alpha_prime()), min=0.0, max=1000000.0)
+                cql_min_qf1_loss = alpha_prime * self.cql_alpha * (cql_qf1_diff - self.cql_target_action_gap)
+                cql_min_qf2_loss = alpha_prime * self.cql_alpha * (cql_qf2_diff - self.cql_target_action_gap)
+                alpha_prime_loss = (-cql_min_qf1_loss - cql_min_qf2_loss) * 0.5 # Thang: Trainable in the continuous setting. Check why not here. 
+            else:
+                cql_min_qf1_loss = cql_qf1_diff * self.cql_alpha
+                cql_min_qf2_loss = cql_qf2_diff * self.cql_alpha
+                alpha_prime_loss = observations.new_tensor(0.0)
+                alpha_prime = observations.new_tensor(0.0)
+
+            qf_loss = qf1_loss + qf2_loss + cql_min_qf1_loss + cql_min_qf2_loss
+        else:
+            q1_predicted = self.critic_1(observations, actions)
+            q2_predicted = self.critic_2(observations, actions)
+
+            if self.cql_max_target_backup:
+                new_next_actions, next_log_pi = self.actor(
+                    next_observations, repeat=self.cql_n_actions
+                )
+                target_q_values, max_target_indices = torch.max(
+                    torch.min(
+                        self.target_critic_1(next_observations, new_next_actions),
+                        self.target_critic_2(next_observations, new_next_actions),
+                    ),
+                    dim=-1,
+                )
+                next_log_pi = torch.gather(
+                    next_log_pi, -1, max_target_indices.unsqueeze(-1)
+                ).squeeze(-1)
+            else:
+                new_next_actions, next_log_pi = self.actor(next_observations)
+                target_q_values = torch.min(
                     self.target_critic_1(next_observations, new_next_actions),
                     self.target_critic_2(next_observations, new_next_actions),
-                ),
-                dim=-1,
+                )
+
+            if self.backup_entropy:
+                target_q_values = target_q_values - alpha * next_log_pi
+
+            target_q_values = target_q_values.unsqueeze(-1)
+            td_target = rewards + (1.0 - dones) * self.discount * target_q_values.detach()
+            td_target = td_target.squeeze(-1)
+            qf1_loss = F.mse_loss(q1_predicted, td_target.detach())
+            qf2_loss = F.mse_loss(q2_predicted, td_target.detach())
+
+            # CQL
+            batch_size = actions.shape[0]
+            action_dim = actions.shape[-1]
+            cql_random_actions = actions.new_empty(
+                (batch_size, self.cql_n_actions, action_dim), requires_grad=False
+            ).uniform_(-1, 1)
+            cql_current_actions, cql_current_log_pis = self.actor(
+                observations, repeat=self.cql_n_actions
             )
-            next_log_pi = torch.gather(
-                next_log_pi, -1, max_target_indices.unsqueeze(-1)
-            ).squeeze(-1)
-        else:
-            new_next_actions, next_log_pi = self.actor(next_observations)
-            target_q_values = torch.min(
-                self.target_critic_1(next_observations, new_next_actions),
-                self.target_critic_2(next_observations, new_next_actions),
+            cql_next_actions, cql_next_log_pis = self.actor(
+                next_observations, repeat=self.cql_n_actions
+            )
+            cql_current_actions, cql_current_log_pis = (
+                cql_current_actions.detach(),
+                cql_current_log_pis.detach(),
+            )
+            cql_next_actions, cql_next_log_pis = (
+                cql_next_actions.detach(),
+                cql_next_log_pis.detach(),
             )
 
-        if self.backup_entropy:
-            target_q_values = target_q_values - alpha * next_log_pi
+            cql_q1_rand = self.critic_1(observations, cql_random_actions)
+            cql_q2_rand = self.critic_2(observations, cql_random_actions)
+            cql_q1_current_actions = self.critic_1(observations, cql_current_actions)
+            cql_q2_current_actions = self.critic_2(observations, cql_current_actions)
+            cql_q1_next_actions = self.critic_1(observations, cql_next_actions)
+            cql_q2_next_actions = self.critic_2(observations, cql_next_actions)
 
-        target_q_values = target_q_values.unsqueeze(-1)
-        td_target = rewards + (1.0 - dones) * self.discount * target_q_values.detach()
-        td_target = td_target.squeeze(-1)
-        qf1_loss = F.mse_loss(q1_predicted, td_target.detach())
-        qf2_loss = F.mse_loss(q2_predicted, td_target.detach())
-
-        # CQL
-        batch_size = actions.shape[0]
-        action_dim = actions.shape[-1]
-        cql_random_actions = actions.new_empty(
-            (batch_size, self.cql_n_actions, action_dim), requires_grad=False
-        ).uniform_(-1, 1)
-        cql_current_actions, cql_current_log_pis = self.actor(
-            observations, repeat=self.cql_n_actions
-        )
-        cql_next_actions, cql_next_log_pis = self.actor(
-            next_observations, repeat=self.cql_n_actions
-        )
-        cql_current_actions, cql_current_log_pis = (
-            cql_current_actions.detach(),
-            cql_current_log_pis.detach(),
-        )
-        cql_next_actions, cql_next_log_pis = (
-            cql_next_actions.detach(),
-            cql_next_log_pis.detach(),
-        )
-
-        cql_q1_rand = self.critic_1(observations, cql_random_actions)
-        cql_q2_rand = self.critic_2(observations, cql_random_actions)
-        cql_q1_current_actions = self.critic_1(observations, cql_current_actions)
-        cql_q2_current_actions = self.critic_2(observations, cql_current_actions)
-        cql_q1_next_actions = self.critic_1(observations, cql_next_actions)
-        cql_q2_next_actions = self.critic_2(observations, cql_next_actions)
-
-        cql_cat_q1 = torch.cat(
-            [
-                cql_q1_rand,
-                torch.unsqueeze(q1_predicted, 1),
-                cql_q1_next_actions,
-                cql_q1_current_actions,
-            ],
-            dim=1,
-        )
-        cql_cat_q2 = torch.cat(
-            [
-                cql_q2_rand,
-                torch.unsqueeze(q2_predicted, 1),
-                cql_q2_next_actions,
-                cql_q2_current_actions,
-            ],
-            dim=1,
-        )
-        cql_std_q1 = torch.std(cql_cat_q1, dim=1)
-        cql_std_q2 = torch.std(cql_cat_q2, dim=1)
-
-        if self.cql_importance_sample:
-            random_density = np.log(0.5**action_dim)
             cql_cat_q1 = torch.cat(
                 [
-                    cql_q1_rand - random_density,
-                    cql_q1_next_actions - cql_next_log_pis.detach(),
-                    cql_q1_current_actions - cql_current_log_pis.detach(),
+                    cql_q1_rand,
+                    torch.unsqueeze(q1_predicted, 1),
+                    cql_q1_next_actions,
+                    cql_q1_current_actions,
                 ],
                 dim=1,
             )
             cql_cat_q2 = torch.cat(
                 [
-                    cql_q2_rand - random_density,
-                    cql_q2_next_actions - cql_next_log_pis.detach(),
-                    cql_q2_current_actions - cql_current_log_pis.detach(),
+                    cql_q2_rand,
+                    torch.unsqueeze(q2_predicted, 1),
+                    cql_q2_next_actions,
+                    cql_q2_current_actions,
                 ],
                 dim=1,
             )
+            cql_std_q1 = torch.std(cql_cat_q1, dim=1)
+            cql_std_q2 = torch.std(cql_cat_q2, dim=1)
 
-        cql_qf1_ood = torch.logsumexp(cql_cat_q1 / self.cql_temp, dim=1) * self.cql_temp
-        cql_qf2_ood = torch.logsumexp(cql_cat_q2 / self.cql_temp, dim=1) * self.cql_temp
+            if self.cql_importance_sample:
+                random_density = np.log(0.5**action_dim)
+                cql_cat_q1 = torch.cat(
+                    [
+                        cql_q1_rand - random_density,
+                        cql_q1_next_actions - cql_next_log_pis.detach(),
+                        cql_q1_current_actions - cql_current_log_pis.detach(),
+                    ],
+                    dim=1,
+                )
+                cql_cat_q2 = torch.cat(
+                    [
+                        cql_q2_rand - random_density,
+                        cql_q2_next_actions - cql_next_log_pis.detach(),
+                        cql_q2_current_actions - cql_current_log_pis.detach(),
+                    ],
+                    dim=1,
+                )
 
-        """Subtract the log likelihood of data"""
-        cql_qf1_diff = torch.clamp(
-            cql_qf1_ood - q1_predicted,
-            self.cql_clip_diff_min,
-            self.cql_clip_diff_max,
-        ).mean()
-        cql_qf2_diff = torch.clamp(
-            cql_qf2_ood - q2_predicted,
-            self.cql_clip_diff_min,
-            self.cql_clip_diff_max,
-        ).mean()
+            cql_qf1_ood = torch.logsumexp(cql_cat_q1 / self.cql_temp, dim=1) * self.cql_temp
+            cql_qf2_ood = torch.logsumexp(cql_cat_q2 / self.cql_temp, dim=1) * self.cql_temp
 
-        if self.cql_lagrange:
-            alpha_prime = torch.clamp(
-                torch.exp(self.log_alpha_prime()), min=0.0, max=1000000.0
-            )
-            cql_min_qf1_loss = (
-                alpha_prime
-                * self.cql_alpha
-                * (cql_qf1_diff - self.cql_target_action_gap)
-            )
-            cql_min_qf2_loss = (
-                alpha_prime
-                * self.cql_alpha
-                * (cql_qf2_diff - self.cql_target_action_gap)
-            )
+            """Subtract the log likelihood of data"""
+            cql_qf1_diff = torch.clamp(
+                cql_qf1_ood - q1_predicted,
+                self.cql_clip_diff_min,
+                self.cql_clip_diff_max,
+            ).mean()
+            cql_qf2_diff = torch.clamp(
+                cql_qf2_ood - q2_predicted,
+                self.cql_clip_diff_min,
+                self.cql_clip_diff_max,
+            ).mean()
 
-            self.alpha_prime_optimizer.zero_grad()
-            alpha_prime_loss = (-cql_min_qf1_loss - cql_min_qf2_loss) * 0.5
-            alpha_prime_loss.backward(retain_graph=True)
-            self.alpha_prime_optimizer.step()
-        else:
-            cql_min_qf1_loss = cql_qf1_diff * self.cql_alpha
-            cql_min_qf2_loss = cql_qf2_diff * self.cql_alpha
-            alpha_prime_loss = observations.new_tensor(0.0)
-            alpha_prime = observations.new_tensor(0.0)
+            if self.cql_lagrange:
+                alpha_prime = torch.clamp(
+                    torch.exp(self.log_alpha_prime()), min=0.0, max=1000000.0
+                )
+                cql_min_qf1_loss = (
+                    alpha_prime
+                    * self.cql_alpha
+                    * (cql_qf1_diff - self.cql_target_action_gap)
+                )
+                cql_min_qf2_loss = (
+                    alpha_prime
+                    * self.cql_alpha
+                    * (cql_qf2_diff - self.cql_target_action_gap)
+                )
 
-        qf_loss = qf1_loss + qf2_loss + cql_min_qf1_loss + cql_min_qf2_loss
+                self.alpha_prime_optimizer.zero_grad()
+                alpha_prime_loss = (-cql_min_qf1_loss - cql_min_qf2_loss) * 0.5
+                alpha_prime_loss.backward(retain_graph=True)
+                self.alpha_prime_optimizer.step()
+            else:
+                cql_min_qf1_loss = cql_qf1_diff * self.cql_alpha
+                cql_min_qf2_loss = cql_qf2_diff * self.cql_alpha
+                alpha_prime_loss = observations.new_tensor(0.0)
+                alpha_prime = observations.new_tensor(0.0)
+
+            qf_loss = qf1_loss + qf2_loss + cql_min_qf1_loss + cql_min_qf2_loss
 
         log_dict.update(
             dict(
@@ -712,28 +838,28 @@ class ContinuousCQL:
                 alpha=alpha.item(),
                 average_qf1=q1_predicted.mean().item(),
                 average_qf2=q2_predicted.mean().item(),
-                average_target_q=target_q_values.mean().item(),
+                # average_target_q=target_q_values.mean().item(),
             )
         )
 
-        log_dict.update(
-            dict(
-                cql_std_q1=cql_std_q1.mean().item(),
-                cql_std_q2=cql_std_q2.mean().item(),
-                cql_q1_rand=cql_q1_rand.mean().item(),
-                cql_q2_rand=cql_q2_rand.mean().item(),
-                cql_min_qf1_loss=cql_min_qf1_loss.mean().item(),
-                cql_min_qf2_loss=cql_min_qf2_loss.mean().item(),
-                cql_qf1_diff=cql_qf1_diff.mean().item(),
-                cql_qf2_diff=cql_qf2_diff.mean().item(),
-                cql_q1_current_actions=cql_q1_current_actions.mean().item(),
-                cql_q2_current_actions=cql_q2_current_actions.mean().item(),
-                cql_q1_next_actions=cql_q1_next_actions.mean().item(),
-                cql_q2_next_actions=cql_q2_next_actions.mean().item(),
-                alpha_prime_loss=alpha_prime_loss.item(),
-                alpha_prime=alpha_prime.item(),
-            )
-        )
+        # log_dict.update(
+        #     dict(
+        #         cql_std_q1=cql_std_q1.mean().item(),
+        #         cql_std_q2=cql_std_q2.mean().item(),
+        #         cql_q1_rand=cql_q1_rand.mean().item(),
+        #         cql_q2_rand=cql_q2_rand.mean().item(),
+        #         cql_min_qf1_loss=cql_min_qf1_loss.mean().item(),
+        #         cql_min_qf2_loss=cql_min_qf2_loss.mean().item(),
+        #         cql_qf1_diff=cql_qf1_diff.mean().item(),
+        #         cql_qf2_diff=cql_qf2_diff.mean().item(),
+        #         cql_q1_current_actions=cql_q1_current_actions.mean().item(),
+        #         cql_q2_current_actions=cql_q2_current_actions.mean().item(),
+        #         cql_q1_next_actions=cql_q1_next_actions.mean().item(),
+        #         cql_q2_next_actions=cql_q2_next_actions.mean().item(),
+        #         alpha_prime_loss=alpha_prime_loss.item(),
+        #         alpha_prime=alpha_prime.item(),
+        #     )
+        # )
 
         return qf_loss, alpha_prime, alpha_prime_loss
 
@@ -747,7 +873,10 @@ class ContinuousCQL:
         ) = batch
         self.total_it += 1
 
-        new_actions, log_pi = self.actor(observations)
+        if self.is_discrete:
+            new_actions, log_pi = self.actor.sample(observations) #Thang: from Grok 3: we use DiscretePolicy here, which is different from the continuous policy/actor
+        else:
+            new_actions, log_pi = self.actor(observations)
 
         alpha, alpha_loss = self._alpha_and_alpha_loss(observations, log_pi)
 
@@ -832,15 +961,85 @@ class ContinuousCQL:
         )
         self.total_it = state_dict["total_it"]
 
+class VectorizeObservationWrapper_Blackjack(gym.ObservationWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        if isinstance(env.observation_space, gym.spaces.Tuple):
+            # Define bounds based on Blackjack's Discrete spaces
+            lows = [0, 0, 0]           # Minimum values
+            highs = [31, 10, 1]        # Maximum values (player sum, dealer card, usable ace)
+            self.observation_space = gym.spaces.Box(
+                low=np.array(lows, dtype=np.float32),
+                high=np.array(highs, dtype=np.float32),
+                dtype=np.float32
+            )
+        else:
+            self.observation_space = env.observation_space
+
+    def observation(self, observation):
+        if isinstance(self.env.observation_space, gym.spaces.Tuple):
+            return np.array(observation, dtype=np.float32)
+        return observation
+
+def load_dataset_blackjack(num_episodes = 100):
+    # Create the Blackjack environment with specified parameters
+    env = gym.make("Blackjack-v1", natural=False, sab=False)
+
+    # Initialize lists to store dataset components
+    dataset = {
+        'observations': [],
+        'actions': [],
+        'rewards': [],
+        'next_observations': [],
+        'terminals': [],
+    }
+
+    for _ in range(num_episodes):
+        obs = env.reset()
+        done = False
+
+        while not done:
+            # Sample a random action from the action space
+            action = env.action_space.sample()
+
+            # Take a step in the environment
+            next_obs, reward, terminated, truncated = env.step(action)
+            done = terminated or truncated
+
+            # Append the transition to the dataset
+            dataset['observations'].append(np.array(obs, dtype=np.float32))
+            dataset['actions'].append([action])
+            dataset['rewards'].append(reward)
+            dataset['next_observations'].append(np.array(next_obs, dtype=np.float32))
+            dataset['terminals'].append(terminated)
+            obs = next_obs
+
+    # Convert lists to numpy arrays with appropriate data types
+    dataset['observations'] = np.stack(dataset['observations'])
+    dataset['actions'] = np.array(dataset['actions'], dtype=np.int32)
+    dataset['rewards'] = np.array(dataset['rewards'], dtype=np.float32)
+    dataset['next_observations'] = np.stack(dataset['next_observations'])
+    dataset['terminals'] = np.array(dataset['terminals'], dtype=np.float32)
+
+    return dataset
 
 @pyrallis.wrap()
 def train(config: TrainConfig):
     env = gym.make(config.env)
-
+    if config.env == "Blackjack-v1":
+        env = VectorizeObservationWrapper_Blackjack(env)
+        dataset = load_dataset_blackjack()
+    else:
+        dataset = d4rl.qlearning_dataset(env)
     state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0]
-
-    dataset = d4rl.qlearning_dataset(env)
+    is_discrete = isinstance(env.action_space, gym.spaces.Discrete)
+    state_dim = env.observation_space.shape[0]
+    if is_discrete:
+        num_actions = env.action_space.n  # Number of actions (2 for Blackjack)
+        action_dim = 1  # Actions are scalars for discrete spaces in replay buffer
+    else:
+        num_actions = None
+        action_dim = env.action_space.shape[0]
 
     if config.normalize_reward:
         modify_reward(
@@ -861,7 +1060,7 @@ def train(config: TrainConfig):
     dataset["next_observations"] = normalize_states(
         dataset["next_observations"], state_mean, state_std
     )
-    env = wrap_env(env, state_mean=state_mean, state_std=state_std)
+    env = wrap_env(env, state_mean=state_mean, state_std=state_std) # Normalize state and scale reward
     replay_buffer = ReplayBuffer(
         state_dim,
         action_dim,
@@ -870,7 +1069,8 @@ def train(config: TrainConfig):
     )
     replay_buffer.load_d4rl_dataset(dataset)
 
-    max_action = float(env.action_space.high[0])
+    # max_action = float(env.action_space.high[0])
+    max_action = float(env.action_space.high[0]) if not is_discrete else None
 
     if config.checkpoints_path is not None:
         print(f"Checkpoints path: {config.checkpoints_path}")
@@ -882,26 +1082,34 @@ def train(config: TrainConfig):
     seed = config.seed
     set_seed(seed, env)
 
-    critic_1 = FullyConnectedQFunction(
-        state_dim,
-        action_dim,
-        config.orthogonal_init,
-        config.q_n_hidden_layers,
-    ).to(config.device)
-    critic_2 = FullyConnectedQFunction(state_dim, action_dim, config.orthogonal_init).to(
-        config.device
-    )
-    critic_1_optimizer = torch.optim.Adam(list(critic_1.parameters()), config.qf_lr)
-    critic_2_optimizer = torch.optim.Adam(list(critic_2.parameters()), config.qf_lr)
+    if is_discrete:
+        actor = DiscretePolicy(state_dim, num_actions, config.orthogonal_init).to(config.device)
+        critic_1 = DiscreteQFunction(state_dim, num_actions, config.orthogonal_init).to(config.device)
+        critic_2 = DiscreteQFunction(state_dim, num_actions, config.orthogonal_init).to(config.device)
+    else:
+        actor = TanhGaussianPolicy(
+            state_dim,
+            action_dim,
+            max_action,
+            log_std_multiplier=config.policy_log_std_multiplier,
+            orthogonal_init=config.orthogonal_init,
+        ).to(config.device)
+        critic_1 = FullyConnectedQFunction(
+            state_dim,
+            action_dim,
+            config.orthogonal_init,
+            config.q_n_hidden_layers,
+        ).to(config.device)
+        critic_2 = FullyConnectedQFunction(
+            state_dim,
+            action_dim,
+            config.orthogonal_init,
+            config.q_n_hidden_layers,
+        ).to(config.device)
 
-    actor = TanhGaussianPolicy(
-        state_dim,
-        action_dim,
-        max_action,
-        log_std_multiplier=config.policy_log_std_multiplier,
-        orthogonal_init=config.orthogonal_init,
-    ).to(config.device)
     actor_optimizer = torch.optim.Adam(actor.parameters(), config.policy_lr)
+    critic_1_optimizer = torch.optim.Adam(critic_1.parameters(), config.qf_lr)
+    critic_2_optimizer = torch.optim.Adam(critic_2.parameters(), config.qf_lr)
 
     kwargs = {
         "critic_1": critic_1,
@@ -914,7 +1122,7 @@ def train(config: TrainConfig):
         "soft_target_update_rate": config.soft_target_update_rate,
         "device": config.device,
         # CQL
-        "target_entropy": -np.prod(env.action_space.shape).item(),
+        "target_entropy": -np.prod(env.action_space.shape).item() if not is_discrete else np.log(num_actions), #Thang explain for discrete case?
         "alpha_multiplier": config.alpha_multiplier,
         "use_automatic_entropy_tuning": config.use_automatic_entropy_tuning,
         "backup_entropy": config.backup_entropy,
@@ -931,6 +1139,8 @@ def train(config: TrainConfig):
         "cql_max_target_backup": config.cql_max_target_backup,
         "cql_clip_diff_min": config.cql_clip_diff_min,
         "cql_clip_diff_max": config.cql_clip_diff_max,
+        "is_discrete": is_discrete,
+        "num_actions": num_actions,
     }
 
     print("---------------------------------------")
@@ -938,7 +1148,8 @@ def train(config: TrainConfig):
     print("---------------------------------------")
 
     # Initialize actor
-    trainer = ContinuousCQL(**kwargs)
+    # trainer = ContinuousCQL(**kwargs)
+    trainer = CQL(**kwargs)
 
     if config.load_model != "":
         policy_file = Path(config.load_model)
@@ -963,13 +1174,13 @@ def train(config: TrainConfig):
                 n_episodes=config.n_episodes,
                 seed=config.seed,
             )
-            eval_score = eval_scores.mean()
-            normalized_eval_score = env.get_normalized_score(eval_score) * 100.0
-            evaluations.append(normalized_eval_score)
+            mean_return = eval_scores.mean()
+            # normalized_eval_score = env.get_normalized_score(eval_score) * 100.0
+            # evaluations.append(normalized_eval_score)
             print("---------------------------------------")
             print(
                 f"Evaluation over {config.n_episodes} episodes: "
-                f"{eval_score:.3f} , D4RL score: {normalized_eval_score:.3f}"
+                f"{mean_return:.3f}"
             )
             print("---------------------------------------")
             if config.checkpoints_path:
@@ -978,11 +1189,13 @@ def train(config: TrainConfig):
                     os.path.join(config.checkpoints_path, f"checkpoint_{t}.pt"),
                 )
             wandb.log(
-                {"d4rl_normalized_score": normalized_eval_score},
+                {
+                    # "d4rl_normalized_score": normalized_eval_score
+                    "mean_return": mean_return
+                },
                 step=trainer.total_it,
             )
 
 
 if __name__ == "__main__":
     train()
-

@@ -9,6 +9,7 @@ from trl import AutoModelForCausalLMWithValueHead
 import re
 import gymnasium as gym
 from llamagym import Agent
+import numpy as np
 
 
 class BlackjackAgent(Agent):
@@ -36,15 +37,17 @@ Decide whether to stay with your current sum by writing "Action: 0" or accept an
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "meta-llama/Llama-2-7b-chat-hf",
+        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        # "model_name": "meta-llama/Llama-2-7b-chat-hf",
         "env": "Blackjack-v1",
-        "lora/r": 16,
-        "lora/lora_alpha": 32,
+        "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
+        "lora/r": 8,
+        "lora/lora_alpha": 16,
         "lora/lora_dropout": 0.05,
         "lora/bias": "none",
         "lora/task_type": "CAUSAL_LM",
         "load_in_8bit": True,
-        "batch_size": 8,
+        "batch_size": 4,
         "seed": 42069,
         "episodes": 5000,
         "generate/max_new_tokens": 32,
@@ -103,10 +106,10 @@ if __name__ == "__main__":
 
         episode_stats = {
             "episode": episode,
-            "total_return": sum(agent.current_episode_rewards),
+            "mean_return": np.mean(agent.current_episode_rewards),
             "message_ct": len(agent.current_episode_messages),
             "episode_messages": agent.current_episode_messages,
         }
-        train_stats = agent.terminate_episode()
+        train_stats = agent.terminate_episode(train=False)
         episode_stats.update(train_stats)
         wandb.log(episode_stats)
