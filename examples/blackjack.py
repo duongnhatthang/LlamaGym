@@ -51,7 +51,7 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "episodes": 5,
+        "episodes": 5000,
         "generate/max_new_tokens": 32,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
