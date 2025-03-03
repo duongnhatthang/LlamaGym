@@ -59,6 +59,7 @@ class Agent(ABC):
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
+        
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         generate_ids = self.model.generate(
             inputs=inputs.input_ids,
@@ -70,8 +71,8 @@ class Agent(ABC):
         outputs = self.tokenizer.batch_decode(
             generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
-        response = outputs[0].split("[/INST]")[-1].strip()
 
+        response = outputs[0].split("[/INST]")[-1].strip()
         return response
 
     def act(self, observation):
