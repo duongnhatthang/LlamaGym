@@ -1,0 +1,13 @@
+d3rlpy
+cython==0.29.32
+torch == 2.2.1
+transformers == 4.38.2
+trl == 0.7.11
+gymnasium == 0.29.1
+peft == 0.7.1
+accelerate == 0.21.0
+bitsandbytes == 0.40.2
+scipy == 1.12.0
+wandb == 0.16.4
+llamagym
+matplotlib
