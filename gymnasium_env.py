@@ -1,12 +1,12 @@
 import argparse
-import gymnasium
+import gymnasium as gym
 import d3rlpy
 import numpy as np
 
-class BlackjackWrapper(gymnasium.ObservationWrapper):
+class BlackjackWrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
-        self.observation_space = gymnasium.spaces.Box(low=-1, high=32, shape=(3,), dtype=np.int32)
+        self.observation_space = gym.spaces.Box(low=-1, high=32, shape=(3,), dtype=np.int32)
 
     def observation(self, obs):
         return np.array(obs, dtype=np.int32)
@@ -22,11 +22,11 @@ def main() -> None:
 
     # d3rlpy supports both Gym and Gymnasium
     if args.env=="Blackjack-v1":
-        env = BlackjackWrapper(gymnasium.make("Blackjack-v1"))
-        eval_env = BlackjackWrapper(gymnasium.make("Blackjack-v1"))
+        env = BlackjackWrapper(gym.make("Blackjack-v1"))
+        eval_env = BlackjackWrapper(gym.make("Blackjack-v1"))
     else:
-        env = gymnasium.make(args.env)
-        eval_env = gymnasium.make(args.env)
+        env = gym.make(args.env)
+        eval_env = gym.make(args.env)
 
     # fix seed
     d3rlpy.seed(args.seed)
@@ -39,7 +39,7 @@ def main() -> None:
         learning_rate=6.25e-5,
         ).create(device=args.gpu)
 
-    with open('llm_data.pkl', 'rb') as file:
+    with open('Qwen2.5-0.5B_eps_5000.pkl', 'rb') as file:
         dataset = pickle.load(file)
 
     # start offline training
