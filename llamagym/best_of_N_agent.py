@@ -5,7 +5,7 @@ import re
 import torch
 
 
-class COTMCTSBlackjackAgent(Agent):
+class BoNBlackjackAgent(Agent):
     def __init__(self, model, tokenizer, judge_model, judge_tokenizer, device, num_cot_samples=5):
         super().__init__(model, tokenizer, device)
         self.judge_model = judge_model
@@ -13,7 +13,6 @@ class COTMCTSBlackjackAgent(Agent):
         self.num_cot_samples = num_cot_samples
         
     def get_system_prompt(self) -> str:
-        """ COT WITH LLM [TODO] NEED BETTER PROMPT LATER? WE HAVE TO TUNE THIS PROMPT! """
         return (
             "You are an expert blackjack player. Every turn, you'll see your current sum, the dealer's showing card value, "
             "and whether you have a usable ace. Your goal is to win by exceeding the dealer's hand but not exceeding 21.\n\n"
@@ -35,8 +34,7 @@ class COTMCTSBlackjackAgent(Agent):
         return cot_answers
     
     def judge_answers(self, messages: List[Dict[str, str]], cot_answers: List[str]) -> str:
-        """ Judge which COT answer is the best using LLM """
-        judge_prompt = judge_prompt = (
+        judge_prompt = (
             "You are evaluating multiple AI responses for the best blackjack strategy. Every turn, the AI receives its current sum, "
             "the dealer's showing card value, and whether it has a usable ace. The AI must decide whether to hit ('Action: 1') "
             "or stay ('Action: 0') to maximize its chances of winning without exceeding 21.\n\n"
@@ -64,7 +62,6 @@ class COTMCTSBlackjackAgent(Agent):
         return cot_answers[best_idx]
 
     def act(self, observation):
-        """ COT + MCTS"""
         message = self.format_observation(observation)
         self.current_episode_messages.append({"role": "user", "content": message})
 
