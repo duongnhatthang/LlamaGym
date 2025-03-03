@@ -126,5 +126,5 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open('Qwen2.5-0.5B_eps_5000.pkl', 'wb') as file:
+    with open(hyperparams["model_name"]+'_eps_'+str(hyperparams['num_episodes'])+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
