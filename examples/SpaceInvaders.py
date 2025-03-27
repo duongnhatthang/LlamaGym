@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "generate/temperature": 0.9,
     }
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
-    device = "cuda:0"
+    device = "cuda"
     HF_TOKEN = os.environ.get("HF_TOKEN")
 
     lora_config = LoraConfig(
@@ -102,5 +102,5 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open("SpaceInvaders_"+hyperparams["model_name"]+'_eps_'+str(hyperparams['num_episodes'])+'.pkl', 'wb') as file:
+    with open("SpaceInvaders_no_hist_"+hyperparams["model_name"]+'_eps_'+str(hyperparams['num_episodes'])+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)

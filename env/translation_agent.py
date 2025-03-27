@@ -52,32 +52,38 @@ class SpaceInvadersAgent(TranslationAgent):
             args = parser.parse_args()
             game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict, obs_translator, game_describer)
-    def extract_action(self, response: str) -> gym.core.ActType:
-        # try:
-        #     match = re.compile(r"Take Action: (\d)").search(response)
-        #     print(f'2 match = {match}, int(match.group(1)={int(match.group(1))}')
-        #     if match:
-        #         out = int(match.group(1))
-        # except Exception as e:
-        #     print(f'2.5 re.compile(r"Take Action: (\d)").search(response) raised an exception: {e}')
 
+    def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
-        if len(digits) == 0 or digits[-1] not in ("0", "1", "2", "3", "4", "5", "6"):
+        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4", "5", "0"):
             if "Move LEFT and FIRE" in response.lower():
-                out = 6
-            elif "Move RIGHT and FIRE" in response.lower():
                 out = 5
-            elif "Move LEFT" in response.lower():
+            elif "Move RIGHT and FIRE" in response.lower():
                 out = 4
-            elif "Move RIGHT" in response.lower():
+            elif "Move LEFT" in response.lower():
                 out = 3
-            elif "FIRE" in response.lower():
+            elif "Move RIGHT" in response.lower():
                 out = 2
-            elif "NOOP" in response.lower():
+            elif "FIRE" in response.lower():
                 out = 1
-        elif digits[-1] in ("0", "1", "2", "3", "4", "5", "6"):
+            elif "NOOP" in response.lower():
+                out = 0
+        elif digits[-1] in ("1", "2", "3", "4", "5", "0"):
             out = int(digits[-1])
         else:
-            print(f"TranslationAgent.extract_action({response}): cannot extract action. Return 1: Do nothing (NOOP)")
-            out = 1
+            print(f"TranslationAgent.extract_action({response}): cannot extract action. Return 0: Do nothing (NOOP)")
+            out = 0
+        if out not in range(6):
+            print(f"TranslationAgent.extract_action({response}): out of bounds. Return 0: Do nothing (NOOP)")
+            out = 0
         return out
+
+    def act(self, observation):
+        """Given an observation, return the action to take. Rewrite to forget previous messages."""
+        self.current_episode_messages = [
+            {
+                "role": "system",
+                "content": self.get_system_prompt(),
+            }
+        ]
+        return super().act(observation)

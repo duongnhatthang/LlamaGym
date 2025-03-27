@@ -45,10 +45,10 @@ class GameDescriber:
                "You can control the movement and actions of your spaceship to dodge attacks and shoot at invaders to achieve a high score."
 
     def describe_action(self):
-        # return """Type "Action: 1" for NOOP (no operation), "Action: 2" to FIRE (trigger fire button), "Action: 3" to move RIGHT, "Action: 4" to move LEFT, "Action: 5" to move RIGHT and FIRE, "Action: 6" to move LEFT and FIRE. 
-        #        Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4, 5, 6]."""
-        return "Type 1 for NOOP (no operation), 2 to FIRE (trigger fire button), 3 to move RIGHT, 4 to move LEFT, 5 to move RIGHT and FIRE, 6 to move LEFT and FIRE. " \
-               "Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4, 5, 6]."
+        # return """Type "Action: 0" for NOOP (no operation), "Action: 1" to FIRE (trigger fire button), "Action: 2" to move RIGHT, "Action: 3" to move LEFT, "Action: 4" to move RIGHT and FIRE, "Action: 5" to move LEFT and FIRE. 
+        #        Ensure you only provide the action number from the valid action list, i.e., [0, 1, 2, 3, 4, 5]."""
+        return "Type 0 for NOOP (no operation), 1 to FIRE (trigger fire button), 2 to move RIGHT, 3 to move LEFT, 4 to move RIGHT and FIRE, 5 to move LEFT and FIRE. " \
+               "Ensure you only provide the action number from the valid action list, i.e., [0, 1, 2, 3, 4, 5]."
 
 
 class TransitionTranslator(ObsTranslator):
@@ -68,17 +68,17 @@ class TransitionTranslator(ObsTranslator):
         return descriptions
 
     def get_action_description(self, action):
-        if action == 1:
+        if action == 0:
             return "Take Action: 'Do nothing (NOOP)'"
-        elif action == 2:
+        elif action == 1:
             return "Take Action: 'FIRE'"
-        elif action == 3:
+        elif action == 2:
             return "Take Action: 'Move RIGHT'"
-        elif action == 4:
+        elif action == 3:
             return "Take Action: 'Move LEFT'"
-        elif action == 5:
+        elif action == 4:
             return "Take Action: 'Move RIGHT and FIRE'"
-        elif action == 6:
+        elif action == 5:
             return "Take Action: 'Move LEFT and FIRE'"
         else:
             return "Take Action: 'Invalid action'"
