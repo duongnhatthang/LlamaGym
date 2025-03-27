@@ -12,7 +12,7 @@ class TranslationAgent(Agent):
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict)
         
     def get_system_prompt(self) -> str:
-        return f"You are an expert-level game player. {self.game_describer.describe_game()}. {self.game_describer.describe_goal()}. {self.game_describer.describe_action()}"
+        return f"You are an expert-level game player. {self.game_describer.describe_game()} {self.game_describer.describe_goal()} {self.game_describer.describe_action()}"
 
     def format_observation(self, observation: gym.core.ObsType) -> str:
         return f"{self.obs_translator.translate(observation)}"
@@ -51,26 +51,33 @@ class SpaceInvadersAgent(TranslationAgent):
             )
             args = parser.parse_args()
             game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
-        super().__init__(model, tokenizer, device, obs_translator, game_describer, generate_config_dict, ppo_config_dict)
+        super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict, obs_translator, game_describer)
     def extract_action(self, response: str) -> gym.core.ActType:
-        match = re.compile(r"Take Action: (\d)").search(response)
-        if match:
-            return int(match.group(1))
+        # try:
+        #     match = re.compile(r"Take Action: (\d)").search(response)
+        #     print(f'2 match = {match}, int(match.group(1)={int(match.group(1))}')
+        #     if match:
+        #         out = int(match.group(1))
+        # except Exception as e:
+        #     print(f'2.5 re.compile(r"Take Action: (\d)").search(response) raised an exception: {e}')
 
         digits = [char for char in response if char.isdigit()]
         if len(digits) == 0 or digits[-1] not in ("0", "1", "2", "3", "4", "5", "6"):
             if "Move LEFT and FIRE" in response.lower():
-                return 6
+                out = 6
             elif "Move RIGHT and FIRE" in response.lower():
-                return 5
+                out = 5
             elif "Move LEFT" in response.lower():
-                return 4
+                out = 4
             elif "Move RIGHT" in response.lower():
-                return 3
+                out = 3
             elif "FIRE" in response.lower():
-                return 2
+                out = 2
             elif "NOOP" in response.lower():
-                return 1
+                out = 1
+        elif digits[-1] in ("0", "1", "2", "3", "4", "5", "6"):
+            out = int(digits[-1])
         else:
             print(f"TranslationAgent.extract_action({response}): cannot extract action. Return 1: Do nothing (NOOP)")
-        return 1
+            out = 1
+        return out

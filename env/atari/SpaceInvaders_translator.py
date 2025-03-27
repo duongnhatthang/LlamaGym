@@ -6,7 +6,6 @@ class ObsTranslator:
 
     def translate(self, state):
         invaders_left_count, player_score, num_lives, player_x, enemies_x, missiles_y, enemies_y = state
-        # breakpoint()
         enemies_positions = [enemies_x, enemies_y]
         missiles_positions = [missiles_y]
 
@@ -46,6 +45,8 @@ class GameDescriber:
                "You can control the movement and actions of your spaceship to dodge attacks and shoot at invaders to achieve a high score."
 
     def describe_action(self):
+        # return """Type "Action: 1" for NOOP (no operation), "Action: 2" to FIRE (trigger fire button), "Action: 3" to move RIGHT, "Action: 4" to move LEFT, "Action: 5" to move RIGHT and FIRE, "Action: 6" to move LEFT and FIRE. 
+        #        Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4, 5, 6]."""
         return "Type 1 for NOOP (no operation), 2 to FIRE (trigger fire button), 3 to move RIGHT, 4 to move LEFT, 5 to move RIGHT and FIRE, 6 to move LEFT and FIRE. " \
                "Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4, 5, 6]."
 

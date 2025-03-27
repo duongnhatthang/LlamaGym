@@ -1,9 +1,42 @@
-# import gym
 import gymnasium as gym
 import ale_py
 import numpy as np
 from atariari.benchmark.wrapper import AtariARIWrapper
 from typing import Optional, Union
+
+class GymCompatWrapper:
+    """A wrapper to make the AtariARIWrapper compatible with the gym API. Specifically, it ensures that the step method returns a tuple of (obs, reward, done, info) instead of (obs, reward, terminated, truncated, info)."""
+    def __init__(self, env):
+        self.env = env
+        self.spec = getattr(self.env, 'spec', None)
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        done = terminated or truncated
+        return obs, reward, done, info
+
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
+
+    # Forward other methods as needed
+    def render(self, *args, **kwargs):
+        return self.env.render(*args, **kwargs)
+    
+    # Forward other common environment attributes/methods as needed
+    def close(self):
+        return self.env.close()
+
+    @property
+    def action_space(self):
+        return self.env.action_space
+
+    @property
+    def observation_space(self):
+        return self.env.observation_space
+
+    # Handle any attribute access not explicitly defined
+    def __getattr__(self, name):
+        return getattr(self.env, name)
 
 class MaxAndSkip(gym.Wrapper):
     """Return only every `skip`-th frame"""
@@ -18,8 +51,9 @@ class MaxAndSkip(gym.Wrapper):
         """Repeat action, sum reward, and max over last observations."""
         total_reward = 0.0
         done = None
+        info = {}
         for i in range(self._skip):
-            obs, reward, done, _, info = self.env.step(action)
+            obs, reward, done, info = self.env.step(action)
             if i == self._skip - 2:
                 self._obs_buffer[0] = obs
             if i == self._skip - 1:
@@ -27,11 +61,7 @@ class MaxAndSkip(gym.Wrapper):
             total_reward += reward
             if done:
                 break
-        # Note that the observation on the done=True frame
-        # doesn't matter
-        # max_frame = self._obs_buffer.max(axis=0)
-
-        return obs, total_reward, done, _, info
+        return obs, total_reward, done, info
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
@@ -39,9 +69,9 @@ class MaxAndSkip(gym.Wrapper):
 class RepresentedAtariEnv(gym.Wrapper):
     def __init__(self, env_name, render_mode=None, frameskip=4, repeat_action_probability=0.0):
         if frameskip > 0:
-            self.env = MaxAndSkip(AtariARIWrapper(gym.make(env_name, render_mode=render_mode, repeat_action_probability=repeat_action_probability)), skip=frameskip)
+            self.env = MaxAndSkip(AtariARIWrapper(GymCompatWrapper(gym.make(env_name, render_mode=render_mode, repeat_action_probability=repeat_action_probability))), skip=frameskip)
         else:
-            super().__init__(AtariARIWrapper(gym.make(env_name, render_mode=render_mode, repeat_action_probability=repeat_action_probability)))
+            super().__init__(AtariARIWrapper(GymCompatWrapper(gym.make(env_name, render_mode=render_mode, repeat_action_probability=repeat_action_probability))))
         self.metadata = self.env.metadata
         self.env_name = env_name
         self.observation = None
@@ -54,11 +84,12 @@ class RepresentedAtariEnv(gym.Wrapper):
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
     def step(self, action):
-        original_next_obs, reward, env_done, env_truncated, info = self.env.step(action)
+        out = self.env.step(action)
+        original_next_obs, reward, env_done, info = self.env.step(action)
         next_obs = self.env.labels()
         self.obs_label = next_obs.keys()
         self.observation = next_obs
-        return np.array(list(next_obs.values())), reward, env_done, env_truncated, info
+        return np.array(list(next_obs.values())), reward, env_done, info
 
     def reset(self, seed=0):
         obs_original, info = self.env.reset(seed=seed)

@@ -12,7 +12,7 @@ wandb == 0.16.4
 llamagym
 matplotlib
 gymnasium[atari]
-'gym[atari]'
+gym[atari]
 git+https://github.com/mila-iqia/atari-representation-learning.git
 gymnasium[accept-rom-license]
 autorom
