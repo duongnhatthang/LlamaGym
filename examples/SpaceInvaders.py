@@ -29,13 +29,13 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "episodes": 50,#5000,
+        "episodes": 2,#5000,
         "generate/max_new_tokens": 32,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 100000
+        "max_episode_len": 100000 # Around 10h per 100k steps in Leviathan server
     }
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
     device = "cuda"
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             terminals.append(int(terminated))
             n_step += 1
             if n_step > 0 and n_step % 1000 == 0:
-                print(f"Episode {episode}, Step {n_step}, max_episode_len: {hyperparams.max_episode_len}")
+                print(f"Episode {episode}, Step {n_step}, max_episode_len: {hyperparams['max_episode_len']}")
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
 
@@ -109,5 +109,5 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open("SpaceInvaders_no_hist_"+hyperparams["model_name"]+'_eps_'+str(hyperparams['num_episodes'])+'.pkl', 'wb') as file:
+    with open("SpaceInvaders_no_hist_"+hyperparams["model_name"]+'_eps_'+str(hyperparams['episodes'])+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
