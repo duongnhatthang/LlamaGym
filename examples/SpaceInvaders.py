@@ -16,7 +16,8 @@ from env.translation_agent import SpaceInvadersAgent
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         # "model_name": "meta-llama/Llama-2-7b-chat-hf",
         "env": "RepresentedSpaceInvaders-v0",#"ALE/SpaceInvaders-v5",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
@@ -28,12 +29,13 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "episodes": 5000,
+        "episodes": 50,#5000,
         "generate/max_new_tokens": 32,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
+        "max_episode_len": 100000
     }
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
     device = "cuda"
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(hyperparams["model_name"], token=HF_TOKEN)
     tokenizer.add_special_tokens({"pad_token": "<pad>"})
     model.pretrained_model.resize_token_embeddings(len(tokenizer))
-    
+
     agent = SpaceInvadersAgent(
         model,
         tokenizer,
@@ -75,7 +77,7 @@ if __name__ == "__main__":
     for episode in trange(hyperparams["episodes"]):
         observation, info = env.reset()
         done = False
-
+        n_step = 0
         while not done:
             action = agent.act(observation)
             # wandb.log({"action": action})
@@ -85,6 +87,11 @@ if __name__ == "__main__":
             actions.append(action)
             rewards.append(reward)
             terminals.append(int(terminated))
+            n_step += 1
+            if n_step > 0 and n_step % 1000 == 0:
+                print(f"Episode {episode}, Step {n_step}, max_episode_len: {hyperparams.max_episode_len}")
+            if n_step >= hyperparams["max_episode_len"]:
+                done = True
 
         episode_stats = {
             "episode": episode,
