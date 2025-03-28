@@ -114,5 +114,5 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open(f"SpaceInvaders_eps_{hyperparams["eps"]}_"+hyperparams["model_name"]+'_Neps_'+str(hyperparams['episodes'])+'.pkl', 'wb') as file:
+    with open('SpaceInvaders_eps_'+hyperparams["eps"]+"_"+hyperparams["model_name"]+'_Neps_'+str(hyperparams['episodes'])+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
