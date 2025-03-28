@@ -57,6 +57,7 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
+        "eps": 0.3,  # epsilon for exploration
     }
     wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
     device = "cuda:0"
@@ -100,7 +101,11 @@ if __name__ == "__main__":
         done = False
 
         while not done:
-            action = agent.act(observation)
+            rand = bool(np.random.binomial(n=1, p=hyperparams["eps"]))
+            if rand:
+                action = env.action_space.sample()
+            else:
+                action = agent.act(observation)
             wandb.log({"action": action})
             observation, reward, terminated, truncated, info = env.step(action)
             agent.assign_reward(reward)

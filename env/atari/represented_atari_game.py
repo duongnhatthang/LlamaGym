@@ -38,6 +38,11 @@ class GymCompatWrapper:
     def __getattr__(self, name):
         return getattr(self.env, name)
 
+class GymCompatWrapper2(GymCompatWrapper):
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        return obs, reward, done, done, info
+
 class MaxAndSkip(gym.Wrapper):
     """Return only every `skip`-th frame"""
 
