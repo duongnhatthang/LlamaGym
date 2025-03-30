@@ -31,7 +31,7 @@ class TranslationAgent(Agent):
                 help="The frameskip for atari environments",
             )
             args = parser.parse_args()
-            game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
+            self.game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
         else:
             self.game_describer = game_describer
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict)
