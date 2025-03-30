@@ -1,5 +1,5 @@
 from .atari import register_environments
-from .atari import SpaceInvaders_translator
+from .atari import SpaceInvaders_translator, Pong_translator
 
 register_environments()
 

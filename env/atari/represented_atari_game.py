@@ -159,10 +159,10 @@ class RepresentedAtariEnv(gym.Wrapper):
 #         env_name = "PitfallNoFrameskip-v4"
 #         super().__init__(env_name=env_name, render_mode=render_mode, frameskip=frameskip, repeat_action_probability=0)
 
-# class RepresentedPong(RepresentedAtariEnv):
-#     def __init__(self, render_mode: Optional[str]=None, frameskip: int=4):
-#         env_name = "PongNoFrameskip-v4"
-#         super().__init__(env_name=env_name, render_mode=render_mode, frameskip=frameskip, repeat_action_probability=0)
+class RepresentedPong(RepresentedAtariEnv):
+    def __init__(self, render_mode: Optional[str]=None, frameskip: int=4):
+        env_name = "PongNoFrameskip-v4"
+        super().__init__(env_name=env_name, render_mode=render_mode, frameskip=frameskip, repeat_action_probability=0)
 
 # class RepresentedPrivateEye(RepresentedAtariEnv):
 #     def __init__(self, render_mode: Optional[str]=None, frameskip: int=4):
@@ -252,7 +252,7 @@ def register_environments():
         # 'RepresentedHero-v0': RepresentedHero,
         # 'RepresentedMontezumaRevenge-v0': RepresentedMontezumaRevenge,
         # 'RepresentedPitfall-v0': RepresentedPitfall,
-        # 'RepresentedPong-v0': RepresentedPong,
+        'RepresentedPong-v0': RepresentedPong,
         # 'RepresentedPrivateEye-v0': RepresentedPrivateEye,
         # 'RepresentedQbert-v0': RepresentedQbert,
         # 'RepresentedRiverraid-v0': RepresentedRiverraid,

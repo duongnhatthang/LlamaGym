@@ -11,15 +11,53 @@ import numpy as np
 import d3rlpy
 import pickle
 
-from env.translation_agent import SpaceInvadersAgent
+from env.translation_agent import SpaceInvadersAgent, PongAgent
+
+def get_agent(model, tokenizer, device, hyperparams):
+    """
+    Returns an instance of the Agent with the provided model, tokenizer, device, and hyperparameters.
+    """
+    # Create the agent with the specified parameters
+    if hyperparams['env'] == "RepresentedSpaceInvaders-v0":
+        agent = SpaceInvadersAgent(
+            model=model,
+            tokenizer=tokenizer,
+            device=device,
+            generate_config_dict={
+                key: value
+                for key, value in hyperparams.items()
+                if key.startswith("generate/")
+            },
+            ppo_config_dict={
+                "batch_size": hyperparams["batch_size"],
+                "mini_batch_size": hyperparams["batch_size"],
+            }
+        )
+    elif hyperparams['env'] == "RepresentedPong-v0":
+        agent = PongAgent(
+            model=model,
+            tokenizer=tokenizer,
+            device=device,
+            generate_config_dict={
+                key: value
+                for key, value in hyperparams.items()
+                if key.startswith("generate/")
+            },
+            ppo_config_dict={
+                "batch_size": hyperparams["batch_size"],
+                "mini_batch_size": hyperparams["batch_size"],
+            }
+        )
+    else:
+        assert False, f"Environment {hyperparams['env']} is not supported. Please provide a valid environment."
+    return agent
 
 
 if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
-        # "model_name": "meta-llama/Llama-2-7b-chat-hf",
-        "env": "RepresentedSpaceInvaders-v0",#"ALE/SpaceInvaders-v5",
+        "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -58,20 +96,7 @@ if __name__ == "__main__":
     tokenizer.add_special_tokens({"pad_token": "<pad>"})
     model.pretrained_model.resize_token_embeddings(len(tokenizer))
 
-    agent = SpaceInvadersAgent(
-        model,
-        tokenizer,
-        device,
-        {
-            key: value
-            for key, value in hyperparams.items()
-            if key.startswith("generate/")
-        },
-        {
-            "batch_size": hyperparams["batch_size"],
-            "mini_batch_size": hyperparams["batch_size"],
-        },
-    )
+    agent = get_agent(model, tokenizer, device, hyperparams)
     env = gym.make(hyperparams["env"])
     observations, actions, rewards, terminals = [], [], [], []
     for episode in trange(hyperparams["episodes"]):
