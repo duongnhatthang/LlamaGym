@@ -111,12 +111,12 @@ if __name__ == "__main__":
             else:
                 action = agent.act(observation)
             # wandb.log({"action": action})
-            observation, reward, terminated, info = env.step(action)
+            observation, reward, done, info = env.step(action)
             agent.assign_reward(reward)
             observations.append(observation)
             actions.append(action)
             rewards.append(reward)
-            terminals.append(int(terminated))
+            terminals.append(int(done))
             n_step += 1
             if n_step > 0 and n_step % 1000 == 0:
                 print(f"Episode {episode}, Step {n_step}, max_episode_len: {hyperparams['max_episode_len']}")
