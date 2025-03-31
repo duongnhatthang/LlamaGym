@@ -114,7 +114,7 @@ if __name__ == "__main__":
     # onl_rewards_eps = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
     # onl_rewards_eps_decay = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
 
-    n_steps = hyperparams['n_episodes']*hyperparams['max_episode_len']*1.2 # rough calculation
+    n_steps = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.2) # rough calculation
 
     # onl_rewards = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
     # onl_rewards_eps = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
