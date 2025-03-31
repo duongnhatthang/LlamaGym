@@ -23,10 +23,10 @@ def online_training(
     else:
         # dqn = d3rlpy.algos.DQNConfig(
         dqn = d3rlpy.algos.DoubleDQNConfig(
-            batch_size=512, #Test smaller batch size: 32, 64. May be noisier
-            learning_rate=2.5e-4,
-            gamma=0.999,
-            target_update_interval=1000 #Test with 1k, 2k, 5k
+            batch_size=hyperparams['batch_size'], #Test smaller batch size: 32, 64. May be noisier
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval'] #Test with 1k, 2k, 5k
             ).create(device=hyperparams['gpu'])
 
     # Initialize empty FIFO buffer
@@ -97,6 +97,10 @@ if __name__ == "__main__":
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,
         "model_path": None,
+        "batch_size":512, #Test smaller batch size: 32, 64. May be noisier
+        "learning_rate":1e-4,
+        "gamma":0.999,
+        "target_update_interval":1000 #Test with 1k, 2k, 5k
     }
 
     # d3rlpy supports both Gym and Gymnasium
