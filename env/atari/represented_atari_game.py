@@ -172,7 +172,7 @@ class RepresentedPong(RepresentedAtariEnv):
 
     def _customize_observation(self, obs):
         # Add additional information of ball velocity or transform the observation
-        if self.prev_ball_x and self.prev_ball_x:
+        if self.prev_ball_x is None or self.prev_ball_x is None:
             v_ball_x, v_ball_y = 0, 0
         else:
             ball_x, ball_y = obs['ball_x'], obs['ball_y']
