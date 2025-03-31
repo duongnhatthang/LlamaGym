@@ -3,3 +3,5 @@ wandb/
 .env
 *.pyc
 dist/
+data/.DS_Store
+.DS_Store

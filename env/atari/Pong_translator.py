@@ -5,9 +5,11 @@ class ObsTranslator:
         pass
 
     def translate(self, state):
-        player_y, player_x, enemy_y, enemy_x, ball_x, ball_y, enemy_score, player_score = state
-        return f"The You are at position ({player_y, player_x}, your opponent is at position ({enemy_y, enemy_x}) ), the ball is at ({ball_y, ball_x})" \
-               f"your oppoent's score is {enemy_score}, your score is {player_score}."
+        player_y, player_x, enemy_y, enemy_x, ball_x, ball_y, enemy_score, player_score, v_ball_x, v_ball_y = state
+        # return f"The You are at position ({player_y, player_x}, your opponent is at position ({enemy_y, enemy_x}) ), the ball is at ({ball_y, ball_x})" \
+        #        f"your oppoent's score is {enemy_score}, your score is {player_score}."
+        return f"The You are at position ({player_y, player_x}, your opponent is at position ({enemy_y, enemy_x}) ), the ball is at ({ball_y, ball_x}), the ball velocity is ({v_ball_y, v_ball_x})" \
+                f"your opponent's score is {enemy_score}, your score is {player_score}."
 
 
 class GameDescriber:

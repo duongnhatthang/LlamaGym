@@ -163,6 +163,44 @@ class RepresentedPong(RepresentedAtariEnv):
     def __init__(self, render_mode: Optional[str]=None, frameskip: int=4):
         env_name = "PongNoFrameskip-v4"
         super().__init__(env_name=env_name, render_mode=render_mode, frameskip=frameskip, repeat_action_probability=0)
+        self.prev_ball_x, self.prev_ball_y = None, None
+        obs = self.env.labels()
+        obs = self._customize_observation(obs)
+        obs_dim = len(obs)
+        self.obs_label = obs.keys()
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
+
+    def _customize_observation(self, obs):
+        # Add additional information of ball velocity or transform the observation
+        if self.prev_ball_x and self.prev_ball_x:
+            v_ball_x, v_ball_y = 0, 0
+        else:
+            ball_x, ball_y = obs['ball_x'], obs['ball_y']
+            # Calculate ball velocity
+            v_ball_x = ball_x - self.prev_ball_x
+            v_ball_y = ball_y - self.prev_ball_y
+            self.prev_ball_x, self.prev_ball_y = ball_x, ball_y
+        obs['v_ball_x'] = v_ball_x
+        obs['v_ball_y'] = v_ball_y
+        return obs
+
+    def step(self, action):
+        out = self.env.step(action)
+        original_next_obs, reward, env_done, info = self.env.step(action)
+        next_obs = self.env.labels()
+        next_obs = self._customize_observation(next_obs)
+        self.obs_label = next_obs.keys()
+        self.observation = next_obs
+        return np.array(list(next_obs.values())), reward, env_done, info
+
+    def reset(self, seed=0):
+        obs_original, info = self.env.reset(seed=seed)
+        obs = self.env.labels()
+        self.prev_ball_x, self.prev_ball_y = None, None
+        obs = self._customize_observation(obs)
+        self.obs_label = obs.keys()
+        self.observation = obs
+        return np.array(list(obs.values())), info
 
 # class RepresentedPrivateEye(RepresentedAtariEnv):
 #     def __init__(self, render_mode: Optional[str]=None, frameskip: int=4):
