@@ -132,3 +132,9 @@ if __name__ == "__main__":
         # onl_rewards[:,i] = online_training(env, eval_env, n_steps=n_steps)
         # onl_rewards_eps[:,i] = online_training(env, eval_env, const_explorer, n_steps=n_steps)
         onl_rewards_eps_decay[:,i]=online_training(env, eval_env, decay_explorer, n_steps=n_steps, n_steps_per_epoch=n_steps_per_epoch, cut_off_threshold=(0,hyperparams['n_episodes']))
+
+    with open(hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
+        pickle.dump(onl_rewards_eps_decay, file)
+
+    # with open('data/RepresentedPong_Neps_1.pkl', 'rb') as file:
+    #     onl_rewards_eps_decay = pickle.load(file)
