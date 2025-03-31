@@ -10,21 +10,13 @@ from env.atari.represented_atari_game import GymCompatWrapper2
 def online_training(
     env,
     eval_env,
+    hyperparams,
     explorer=None,
-    model_path=None,
-    model=None,
-    data_path=None,
-    n_pretrain_eps=125,
-    limit=100000, #Test with 100k, 200k, 500k. 1M might be too much
-    n_steps=1050,
-    n_steps_per_epoch=300,
-    # update_interval=1,
-    cut_off_threshold=None,
-    gpu=True
+    model=None
 ):
     # Load model with proper validation
-    if model_path:
-        with open(model_path, 'rb') as file:
+    if hyperparams['model_path']:
+        with open(hyperparams['model_path'], 'rb') as file:
             dqn = pickle.load(file)
     elif model:
         dqn = model
@@ -35,26 +27,26 @@ def online_training(
             learning_rate=2.5e-4,
             gamma=0.999,
             target_update_interval=1000 #Test with 1k, 2k, 5k
-            ).create(device=gpu)
+            ).create(device=hyperparams['gpu'])
 
     # Initialize empty FIFO buffer
     buffer = d3rlpy.dataset.ReplayBuffer(
-        buffer=d3rlpy.dataset.FIFOBuffer(limit=limit),
+        buffer=d3rlpy.dataset.FIFOBuffer(limit=hyperparams['buffer_size']),
         env=env,
     )
-    
+
     # Load and merge offline data with type-checking
-    if data_path:
+    if hyperparams['data_path']:
         try:
             # Load dataset with proper validation
-            with open(data_path, 'rb') as f:
+            with open(hyperparams['data_path'], 'rb') as f:
                 dataset = pickle.load(f)
-            
+
             # Verify dataset structure
             if hasattr(dataset, 'episodes'):
                 # Calculate safe episode count to load
-                valid_episodes = min(n_pretrain_eps, len(dataset.episodes))
-                
+                valid_episodes = min(hyperparams['n_pretrain_eps'], len(dataset.episodes))
+
                 # Append episodes with transition validation
                 for episode in dataset.episodes[:valid_episodes]:
                     if len(episode) > 0 and hasattr(episode, 'rewards'):
@@ -72,8 +64,8 @@ def online_training(
         buffer=buffer,
         explorer=explorer,
         eval_env=eval_env,
-        n_steps=n_steps,
-        n_steps_per_epoch=n_steps_per_epoch,
+        n_steps=hyperparams['n_steps'],
+        n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
         # update_interval=update_interval,
         # experiment_name="online_training",
     )
@@ -84,9 +76,9 @@ def online_training(
         # if hasattr(episode, 'rewards') and episode.rewards.size > 0:
         #     rewards.extend(episode.rewards.flatten().tolist())
         rewards.append(episode.returns)
-    
-    if cut_off_threshold:
-        start, end = cut_off_threshold
+
+    if hyperparams['cut_off_threshold']:
+        start, end = hyperparams['cut_off_threshold']
         rewards = rewards[start:end]
     return rewards
 
@@ -99,9 +91,13 @@ if __name__ == "__main__":
         "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
         "eps": 0.3,  # epsilon for exploration
         "n_exp": 1,
+        "n_pretrain_eps": 1000,
+        "n_online_eps": 1000,
+        "gpu": True, # True if use GPU to train with d3rlpy
+        "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
+        "data_path": None,
+        "model_path": None,
     }
-    # n_pretrain_eps = 1
-    # n_online_eps = 9
 
     # d3rlpy supports both Gym and Gymnasium
     env = GymCompatWrapper2(gym.make(hyperparams['env']))
@@ -114,7 +110,6 @@ if __name__ == "__main__":
     # onl_rewards_eps = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
     # onl_rewards_eps_decay = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
 
-    n_steps = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.2) # rough calculation
 
     # onl_rewards = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
     # onl_rewards_eps = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
@@ -127,11 +122,15 @@ if __name__ == "__main__":
         end_epsilon=0.1,
         duration=500000,
     )
-    n_steps_per_epoch = int(max(1, n_steps//100))
+
+    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.2) # rough calculation
+    hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//100))
+    hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
+
     for i in range(hyperparams['n_exp']):
         # onl_rewards[:,i] = online_training(env, eval_env, n_steps=n_steps)
         # onl_rewards_eps[:,i] = online_training(env, eval_env, const_explorer, n_steps=n_steps)
-        onl_rewards_eps_decay[:,i]=online_training(env, eval_env, decay_explorer, n_steps=n_steps, n_steps_per_epoch=n_steps_per_epoch, cut_off_threshold=(0,hyperparams['n_episodes']))
+        onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, decay_explorer)
 
     with open(hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
         pickle.dump(onl_rewards_eps_decay, file)
