@@ -48,8 +48,8 @@ if __name__ == "__main__":
         "lora/lora_dropout": 0.05,
         "lora/bias": "none",
         "lora/task_type": "CAUSAL_LM",
-        "load_in_8bit": True,
-        "batch_size": 4,
+        "load_in_8bit": False,
+        "batch_size": 1,
         "seed": 42069,
         "episodes": 5000,
         "generate/max_new_tokens": 32,
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         "generate/temperature": 0.9,
     }
     wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
-    device = "cuda:0"
+    device = "cuda"
     HF_TOKEN = os.environ.get("HF_TOKEN")
 
     lora_config = LoraConfig(
