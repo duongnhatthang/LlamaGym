@@ -84,9 +84,8 @@ def online_training(
 if __name__ == "__main__":
     hyperparams = {
         "env": "RepresentedPong-v0",
-        "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 100,#5000,
+        "n_episodes": 200,#5000,
         "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 1,
