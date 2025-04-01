@@ -104,6 +104,7 @@ class TranslationAgent(Agent):
         # e.g. "Here are multiple answers. Which is best, 1..N? Return only the number."
         judge_prompt = (
             "You are judging multiple possible answers to a game observation.\n"
+            f"Here is the game description: {self.get_system_prompt()}\n"
             "Answers:\n"
         )
         for i, resp in enumerate(candidate_responses, start=1):
