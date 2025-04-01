@@ -16,8 +16,9 @@ def online_training(
 ):
     # Load model with proper validation
     if hyperparams['model_path']:
-        with open(hyperparams['model_path'], 'rb') as file:
-            dqn = pickle.load(file)
+        # with open(hyperparams['model_path'], 'rb') as file:
+        #     dqn = pickle.load(file)
+        dqn = d3rlpy.load_learnable(hyperparams['model_path'])
     elif model:
         dqn = model
     else:
@@ -73,9 +74,7 @@ def online_training(
     # Extract rewards safely
     rewards = []
     for episode in buffer.episodes: # Only collect the online data
-        # if hasattr(episode, 'rewards') and episode.rewards.size > 0:
-        #     rewards.extend(episode.rewards.flatten().tolist())
-        rewards.append(episode.returns)
+        rewards.append(episode.compute_return())
 
     if hyperparams['cut_off_threshold']:
         start, end = hyperparams['cut_off_threshold']
@@ -96,9 +95,9 @@ if __name__ == "__main__":
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 10000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
-        "model_path": None,
+        "model_path": None,#'d3rlpy_loss/DoubleDQN_online_20250331153346/model_600000.d3',
         "batch_size":1024, #Test smaller batch size: 32, 64. May be noisier
-        "learning_rate":1e-4,
+        "learning_rate":3e-4,
         "gamma":0.999,
         "target_update_interval":1000 #Test with 1k, 2k, 5k
     }
@@ -113,11 +112,11 @@ if __name__ == "__main__":
     # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
-        end_epsilon=0.1,
-        duration=25000,
+        end_epsilon=0.05,
+        duration=75000,
     )
 
-    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.1) # rough calculation
+    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
     hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//100))
     hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
