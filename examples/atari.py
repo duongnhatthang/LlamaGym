@@ -55,8 +55,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -67,15 +67,16 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "episodes": 1,#5000,
+        "n_episodes": 500,#5000,
         "generate/max_new_tokens": 32,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 100000, # Around 10h per 100k steps in Leviathan server
-        "eps": 0.3,  # epsilon for exploration
+        "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
+        "eps": 0.01,  # epsilon for exploration
     }
+    # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
     device = "cuda"
     HF_TOKEN = os.environ.get("HF_TOKEN")
@@ -100,11 +101,13 @@ if __name__ == "__main__":
     agent = get_agent(model, tokenizer, device, hyperparams)
     env = gym.make(hyperparams["env"])
     observations, actions, rewards, terminals = [], [], [], []
-    for episode in trange(hyperparams["episodes"]):
+    # counter = 0
+    for episode in trange(hyperparams["n_episodes"]):
         observation, info = env.reset()
         done = False
         n_step = 0
         while not done:
+            # rand = bool(np.random.binomial(n=1, p=eps_list[counter]))
             rand = bool(np.random.binomial(n=1, p=hyperparams["eps"]))
             if rand:
                 action = env.action_space.sample()
@@ -132,6 +135,7 @@ if __name__ == "__main__":
         train_stats = agent.terminate_episode(train=False)
         episode_stats.update(train_stats)
         # wandb.log(episode_stats)
+        # counter += 1
 
     dataset = d3rlpy.dataset.MDPDataset(
         observations=np.array(observations),
@@ -139,5 +143,5 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open(hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['episodes'])+'.pkl', 'wb') as file:
+    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
