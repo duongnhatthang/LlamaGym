@@ -97,7 +97,7 @@ if __name__ == "__main__":
         "buffer_size": 10000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
         "model_path": None,
-        "batch_size":512, #Test smaller batch size: 32, 64. May be noisier
+        "batch_size":1024, #Test smaller batch size: 32, 64. May be noisier
         "learning_rate":1e-4,
         "gamma":0.999,
         "target_update_interval":1000 #Test with 1k, 2k, 5k
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
-        end_epsilon=0.01,
+        end_epsilon=0.1,
         duration=25000,
     )
 
