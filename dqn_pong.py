@@ -95,8 +95,8 @@ if __name__ == "__main__":
         "buffer_size": 10000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
         "model_path": None,#'d3rlpy_loss/DoubleDQN_online_20250331153346/model_600000.d3',
-        "batch_size":1024, #Test smaller batch size: 32, 64. May be noisier
-        "learning_rate":3e-4,
+        "batch_size":2048, #Test smaller batch size: 32, 64. May be noisier
+        "learning_rate":1e-3,
         "gamma":0.999,
         "target_update_interval":1000 #Test with 1k, 2k, 5k
     }
@@ -104,6 +104,11 @@ if __name__ == "__main__":
     # d3rlpy supports both Gym and Gymnasium
     env = GymCompatWrapper2(gym.make(hyperparams['env']))
     eval_env = GymCompatWrapper2(gym.make(hyperparams['env']))
+    # fix seed
+    d3rlpy.seed(hyperparams['seed'])
+    d3rlpy.envs.seed_env(env, hyperparams['seed'])
+    d3rlpy.envs.seed_env(eval_env, hyperparams['seed'])
+    np.random.seed(hyperparams['seed'])
 
     onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
 
@@ -116,7 +121,7 @@ if __name__ == "__main__":
     )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
-    hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//100))
+    hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
     hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
     for i in range(hyperparams['n_exp']):
