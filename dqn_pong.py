@@ -87,15 +87,15 @@ if __name__ == "__main__":
         "env": "RepresentedPong-v0",
         "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 500,#5000,
+        "n_episodes": 100,#5000,
         "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
-        "eps": 0.3,  # epsilon for exploration
+        "eps": 0.1,  # epsilon for exploration
         "n_exp": 1,
         "n_pretrain_eps": 500,
         "n_online_eps": 500,
         "gpu": True, # True if use GPU to train with d3rlpy
-        "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
-        "data_path": 'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
+        "buffer_size": 10000, #Test with 100k, 200k, 500k. 1M might be too much
+        "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
         "model_path": None,
         "batch_size":512, #Test smaller batch size: 32, 64. May be noisier
         "learning_rate":1e-4,
@@ -106,39 +106,26 @@ if __name__ == "__main__":
     # d3rlpy supports both Gym and Gymnasium
     env = GymCompatWrapper2(gym.make(hyperparams['env']))
     eval_env = GymCompatWrapper2(gym.make(hyperparams['env']))
-    # n_exp = 3
-    # llama_LORO_rewards = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
-    # Qwen_LORO_rewards = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
-    # rand_LORO_rewards = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
-    # onl_rewards = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
-    # onl_rewards_eps = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
-    # onl_rewards_eps_decay = np.zeros((n_pretrain_eps + n_online_eps, n_exp))
 
-
-    # onl_rewards = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
-    # onl_rewards_eps = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
     onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
 
     # setup explorers
-    # const_explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
-    decay_explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
-        start_epsilon=0.5,
-        end_epsilon=0.1,
-        duration=250000,
+    # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
+    explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
+        start_epsilon=1,
+        end_epsilon=0.01,
+        duration=25000,
     )
 
-    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.2) # rough calculation
+    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']*1.1) # rough calculation
     hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//100))
     hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
     for i in range(hyperparams['n_exp']):
-        # onl_rewards[:,i] = online_training(env, eval_env, n_steps=n_steps)
-        # onl_rewards_eps[:,i] = online_training(env, eval_env, const_explorer, n_steps=n_steps)
-        onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, decay_explorer)
+        onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, explorer)
 
-    with open('finetune_'+hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
-    # with open(hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
+    with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
         pickle.dump(onl_rewards_eps_decay, file)
 
-    # with open('data/RepresentedPong_Neps_1.pkl', 'rb') as file:
+    # with open('data/finetune_RepresentedPong_Neps_500.pkl', 'rb') as file:
     #     onl_rewards_eps_decay = pickle.load(file)
