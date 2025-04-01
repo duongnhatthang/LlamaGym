@@ -55,8 +55,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        # "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     agent = get_agent(model, tokenizer, device, hyperparams)
     env = gym.make(hyperparams["env"])
     observations, actions, rewards, terminals = [], [], [], []
-    # counter = 0
+    counter = 0
     for episode in trange(hyperparams["n_episodes"]):
         observation, info = env.reset()
         done = False
@@ -121,21 +121,21 @@ if __name__ == "__main__":
             rewards.append(reward)
             terminals.append(int(done))
             n_step += 1
-            if n_step > 0 and n_step % 1000 == 0:
-                print(f"Episode {episode}, Step {n_step}, max_episode_len: {hyperparams['max_episode_len']}")
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
 
         episode_stats = {
             "episode": episode,
-            "mean_return": np.mean(agent.current_episode_rewards),
+            "sum_return": sum(agent.current_episode_rewards),
             "message_ct": len(agent.current_episode_messages),
             "episode_messages": agent.current_episode_messages,
         }
         train_stats = agent.terminate_episode(train=False)
         episode_stats.update(train_stats)
         # wandb.log(episode_stats)
-        # counter += 1
+        if counter > 0 and counter % int(hyperparams["n_episodes"]//100) == 0:
+            print(f"Episode {counter}, sum return: {sum(agent.current_episode_rewards)}")
+        counter += 1
 
     dataset = d3rlpy.dataset.MDPDataset(
         observations=np.array(observations),
