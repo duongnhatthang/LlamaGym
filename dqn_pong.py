@@ -92,11 +92,11 @@ if __name__ == "__main__":
         "n_pretrain_eps": 500,
         "n_online_eps": 500,
         "gpu": True, # True if use GPU to train with d3rlpy
-        "buffer_size": 10000, #Test with 100k, 200k, 500k. 1M might be too much
+        "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
         "model_path": None,#'d3rlpy_loss/DoubleDQN_online_20250331153346/model_600000.d3',
         "batch_size":2048, #Test smaller batch size: 32, 64. May be noisier
-        "learning_rate":1e-3,
+        "learning_rate":1e-4,
         "gamma":0.999,
         "target_update_interval":1000 #Test with 1k, 2k, 5k
     }
@@ -116,8 +116,8 @@ if __name__ == "__main__":
     # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
-        end_epsilon=0.05,
-        duration=75000,
+        end_epsilon=0.1,
+        duration=1000000,
     )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
