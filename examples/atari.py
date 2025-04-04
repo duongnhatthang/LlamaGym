@@ -120,10 +120,10 @@ if __name__ == "__main__":
             observations.append(observation)
             actions.append(action)
             rewards.append(reward)
-            terminals.append(int(done))
             n_step += 1
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
+            terminals.append(int(done))
         break # temp for debugging
 
         episode_stats = {

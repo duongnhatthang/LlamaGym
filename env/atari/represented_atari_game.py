@@ -164,7 +164,7 @@ class RepresentedPong(RepresentedAtariEnv):
         env_name = "PongNoFrameskip-v4"
         super().__init__(env_name=env_name, render_mode=render_mode, frameskip=frameskip, repeat_action_probability=0)
         self.prev_ball_x, self.prev_ball_y = None, None
-        obs = self.env.labels()
+        obs = self.env.labels() # Call atariari library to get the labels from ram
         obs = self._customize_observation(obs)
         obs_dim = len(obs)
         self.obs_label = obs.keys()
@@ -182,6 +182,8 @@ class RepresentedPong(RepresentedAtariEnv):
         self.prev_ball_x, self.prev_ball_y = ball_x, ball_y
         obs['v_ball_x'] = v_ball_x
         obs['v_ball_y'] = v_ball_y
+        if v_ball_y<0 or v_ball_x<0:
+            print(f"V_x, V_y = {obs['v_ball_x']}, {obs['v_ball_y']}")
         return obs
 
     def step(self, action):
