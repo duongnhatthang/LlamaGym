@@ -37,9 +37,11 @@ class GameDescriber:
                "The first player to score 21 points wins the game."
 
     def describe_action(self):
-        return "Type 0 for NOOP (no operation), 1 to hit the ball, " \
-               "2 to move right, 3 to move left, 4 to move right while hit the ball, 5 to move left while hit the ball. Ensure you only provide the action number " \
-               "from the valid action list, i.e., [0, 1, 2, 3, 4, 5]."
+        return "Type 0 for NOOP (no operation), 2 to move up, 3 to move down" \
+               "Ensure you only provide the action number from the valid action list, i.e., [0, 2, 3]."
+        # return "Type 0 for NOOP (no operation), 1 to hit the ball, " \
+        #        "2 to move right, 3 to move left, 4 to move right while hit the ball, 5 to move left while hit the ball. Ensure you only provide the action number " \
+        #        "from the valid action list, i.e., [0, 1, 2, 3, 4, 5]."
 
 
 class TransitionTranslator(ObsTranslator):
