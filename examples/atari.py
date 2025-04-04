@@ -125,7 +125,8 @@ if __name__ == "__main__":
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
             terminals.append(int(done))
-            print(observation)
+            print(observation, action, reward)
+        print(n_step) #length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B (just move up)
         break # temp for debugging
 
         episode_stats = {
