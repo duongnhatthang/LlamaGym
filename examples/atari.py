@@ -57,8 +57,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        # "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
