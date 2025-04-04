@@ -58,7 +58,7 @@ def get_agent(model, tokenizer, device, hyperparams):
 if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        # "model_name": "Qwen/Qwen2.5-1.5B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-14B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -69,13 +69,13 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 500,#5000,
+        "n_episodes": 5,#5000, # 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
         "generate/max_new_tokens": 2000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
+        "max_episode_len": 500,
         "eps": 0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
@@ -115,7 +115,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                print(agent.current_episode_messages)
+                # print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             agent.assign_reward(reward)
@@ -126,10 +126,12 @@ if __name__ == "__main__":
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
             terminals.append(int(done))
-            print(n_step, observation, action, reward)#length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B, 14B, 32B (just move up)
+        print(n_step, observation, action, reward)#length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B, 14B, 32B (just move up)
         # 412 for 32B with suggested policy
         # COT 413 for 0.5B, 500 w/ -20 score for 7B, 500 w/ -17 score for 32B
-        break # temp for debugging
+        # MajorityVoting: 382 for 7B w/ temp=0.9, N=3, 382 for 7B w/ temp=0.9, N=5
+        # Best-of-N: 382 for 7B
+        # break # temp for debugging
 
         episode_stats = {
             "episode": episode,
