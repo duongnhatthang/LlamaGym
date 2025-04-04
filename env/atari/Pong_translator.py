@@ -8,9 +8,9 @@ class ObsTranslator:
         player_y, player_x, enemy_y, enemy_x, ball_x, ball_y, enemy_score, player_score, v_ball_x, v_ball_y = state
         # return f"The You are at position ({player_y, player_x}, your opponent is at position ({enemy_y, enemy_x}) ), the ball is at ({ball_y, ball_x})" \
         #        f"your oppoent's score is {enemy_score}, your score is {player_score}."
-        return f"You are at position ({player_x}, {player_y}), your opponent is at position ({enemy_x}, {enemy_y}), " \
+        return f"The origin (0,0) is in the top left corner. You are at position ({player_x}, {player_y}), your opponent is at position ({enemy_x}, {enemy_y}), " \
                 f"the ball is at ({ball_x}, {ball_y}), the ball velocity is ({v_ball_x}, {v_ball_y}). "\
-                f"your opponent's score is {enemy_score}, your score is {player_score}."
+                f"Your opponent's score is {enemy_score}, your score is {player_score}."
 
 
 class GameDescriber:
