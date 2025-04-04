@@ -6,3 +6,12 @@ dist/
 data/.DS_Store
 .DS_Store
 d3rlpy_logs/*/*.d3
+d3rlpy_logs/*/*.json
+d3rlpy_logs/*/loss.csv
+d3rlpy_logs/*/rollout_return.csv
+d3rlpy_logs/*/time_algorithm_update.csv
+d3rlpy_logs/*/time_environment_step.csv
+d3rlpy_logs/*/time_inference.csv
+d3rlpy_logs/*/time_sample_batch.csv
+d3rlpy_logs/*/time_step.csv
+data/*.zip

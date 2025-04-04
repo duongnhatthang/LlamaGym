@@ -113,6 +113,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
+                print(f"Step {n_step}: {agent.current_episode_messages}") # For debugging
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             agent.assign_reward(reward)
@@ -123,6 +124,7 @@ if __name__ == "__main__":
             n_step += 1
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
+        break # temp for debugging
 
         episode_stats = {
             "episode": episode,
