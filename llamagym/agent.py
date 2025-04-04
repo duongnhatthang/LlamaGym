@@ -49,13 +49,13 @@ class Agent(ABC):
         self.tokenizer = tokenizer
         self.device = device
         self.generate_config_dict = generate_config_dict
-        try:
-            self.model_ref = create_reference_model(model)
-        except Exception as e:
-            print(f"Error creating reference model: {e}")
-            self.model_ref = custom_create_reference_model(model)
-        self.ppo_config = PPOConfig(**ppo_config_dict)
-        self.ppo_trainer = PPOTrainer(self.ppo_config, model, self.model_ref, tokenizer)
+        # try:
+        #     self.model_ref = create_reference_model(model)
+        # except Exception as e:
+        #     print(f"Error creating reference model: {e}")
+        #     self.model_ref = custom_create_reference_model(model)
+        # self.ppo_config = PPOConfig(**ppo_config_dict)
+        # self.ppo_trainer = PPOTrainer(self.ppo_config, model, self.model_ref, tokenizer)
 
         self.current_batch = {"queries": [], "responses": [], "rewards": []}
 
