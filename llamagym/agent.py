@@ -8,7 +8,27 @@ from trl import (
     PPOConfig,
     create_reference_model,
 )
+from copy import deepcopy
 
+def custom_create_reference_model(model):
+    # Deep copy the model
+    ref_model = deepcopy(model)
+    
+    # Fix hooks with None values
+    for module in ref_model.modules():
+        if hasattr(module, '_forward_pre_hooks'):
+            for hook_id, hook in module._forward_pre_hooks.items():
+                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                    module._forward_pre_hooks[hook_id].extra_dict_ref = tuple()
+        if hasattr(module, '_forward_hooks'):
+            for hook_id, hook in module._forward_hooks.items():
+                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                    module._forward_hooks[hook_id].extra_dict_ref = tuple()
+        if hasattr(module, '_backward_hooks'):
+            for hook_id, hook in module._backward_hooks.items():
+                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                    module._backward_hooks[hook_id].extra_dict_ref = tuple()
+    return ref_model
 
 class Agent(ABC):
     def __init__(
@@ -29,7 +49,11 @@ class Agent(ABC):
         self.tokenizer = tokenizer
         self.device = device
         self.generate_config_dict = generate_config_dict
-        self.model_ref = create_reference_model(model)
+        try:
+            self.model_ref = create_reference_model(model)
+        except Exception as e:
+            print(f"Error creating reference model: {e}")
+            self.model_ref = custom_create_reference_model(model)
         self.ppo_config = PPOConfig(**ppo_config_dict)
         self.ppo_trainer = PPOTrainer(self.ppo_config, model, self.model_ref, tokenizer)
 
