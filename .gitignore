@@ -5,3 +5,4 @@ wandb/
 dist/
 data/.DS_Store
 .DS_Store
+d3rlpy_logs/*/*.d3

@@ -72,14 +72,15 @@ def online_training(
     )
 
     # Extract rewards safely
-    rewards = []
-    for episode in buffer.episodes: # Only collect the online data
-        rewards.append(episode.compute_return())
+    # rewards = []
+    # for episode in buffer.episodes: # Only collect the online data
+    #     rewards.append(episode.compute_return())
 
-    if hyperparams['cut_off_threshold']:
-        start, end = hyperparams['cut_off_threshold']
-        rewards = rewards[start:end]
-    return rewards
+    # if hyperparams['cut_off_threshold']:
+    #     start, end = hyperparams['cut_off_threshold']
+    #     rewards = rewards[start:end]
+    # return rewards
+    return buffer.episodes
 
 if __name__ == "__main__":
     hyperparams = {
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     d3rlpy.envs.seed_env(eval_env, hyperparams['seed'])
     np.random.seed(hyperparams['seed'])
 
-    onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
+    # onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
 
     # setup explorers
     # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
@@ -125,10 +126,10 @@ if __name__ == "__main__":
     hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
     for i in range(hyperparams['n_exp']):
-        onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, explorer)
-
-    with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
-        pickle.dump(onl_rewards_eps_decay, file)
+        # onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, explorer)
+        episodes = online_training(env, eval_env, hyperparams, explorer) # return buffer.episodes
+        # with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_exp_'+str(i)+'.pkl', 'wb') as file:
+        #     pickle.dump(episodes, file)
 
     # with open('data/finetune_RepresentedPong_Neps_500.pkl', 'rb') as file:
     #     onl_rewards_eps_decay = pickle.load(file)
