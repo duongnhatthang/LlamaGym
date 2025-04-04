@@ -57,8 +57,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        # "model_name": "Qwen/Qwen2.5-14B-Instruct",
-        "model_name": "Qwen/Qwen2.5-1.5B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-1.5B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -128,6 +128,7 @@ if __name__ == "__main__":
             terminals.append(int(done))
             print(n_step, observation, action, reward)#length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B, 14B, 32B (just move up)
         # 412 for 32B with suggested policy
+        # COT 413 for 0.5B, 500 w/ -20 score for 7B, 500 w/ -17 score for 32B
         break # temp for debugging
 
         episode_stats = {
