@@ -177,13 +177,11 @@ class RepresentedPong(RepresentedAtariEnv):
             v_ball_x, v_ball_y = 0, 0
         else:
             # Calculate ball velocity
-            v_ball_x = ball_x - self.prev_ball_x
-            v_ball_y = ball_y - self.prev_ball_y
+            v_ball_x = int(ball_x) - int(self.prev_ball_x)
+            v_ball_y = int(ball_y) - int(self.prev_ball_y)
         self.prev_ball_x, self.prev_ball_y = ball_x, ball_y
         obs['v_ball_x'] = v_ball_x
         obs['v_ball_y'] = v_ball_y
-        if v_ball_y<0 or v_ball_x<0:
-            print(f"V_x, V_y = {obs['v_ball_x']}, {obs['v_ball_y']}")
         return obs
 
     def step(self, action):

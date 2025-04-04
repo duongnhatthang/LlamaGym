@@ -13,31 +13,9 @@ class TranslationAgent(Agent):
         self.num_votes = num_votes # MVOTE
         self.num_cot_samples = num_cot_samples # BEST
         self.obs_translator = obs_translator
-        if game_describer is None:
-            parser = argparse.ArgumentParser(
-                description="Place holder args to init stuff."
-            )
-            parser.add_argument(
-                "--is_only_local_obs",
-                type=int,
-                default=1,
-                help="Whether only taking local observations, if is_only_local_obs = 1, only using local obs"
-            )
-            parser.add_argument(
-                "--max_episode_len",
-                type=int,
-                default=108000//6,
-                help="The maximum number of steps in an episode",
-            )
-            parser.add_argument(
-                "--frameskip",
-                type=int,
-                default=4,
-                help="The frameskip for atari environments",
-            )
-            args = parser.parse_args()
-            self.game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
-        else:
+        if game_describer is None and self.game_describer is None:
+            assert False, "game_describer is None. Please provide a game describer."
+        elif game_describer:
             self.game_describer = game_describer
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict)
         
@@ -183,6 +161,30 @@ class SpaceInvadersAgent(TranslationAgent):
     ):
         if obs_translator is None:
             obs_translator = atari.SpaceInvaders_translator.ObsTranslator()
+        if game_describer is None:
+            parser = argparse.ArgumentParser(
+                description="Place holder args to init stuff."
+            )
+            parser.add_argument(
+                "--is_only_local_obs",
+                type=int,
+                default=1,
+                help="Whether only taking local observations, if is_only_local_obs = 1, only using local obs"
+            )
+            parser.add_argument(
+                "--max_episode_len",
+                type=int,
+                default=108000//6,
+                help="The maximum number of steps in an episode",
+            )
+            parser.add_argument(
+                "--frameskip",
+                type=int,
+                default=4,
+                help="The frameskip for atari environments",
+            )
+            args = parser.parse_args()
+            self.game_describer = atari.SpaceInvaders_translator.GameDescriber(args)
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict, obs_translator, game_describer)
 
     def extract_action(self, response: str) -> gym.core.ActType:
@@ -216,10 +218,35 @@ class PongAgent(TranslationAgent):
     ):
         if obs_translator is None:
             obs_translator = atari.Pong_translator.ObsTranslator()
+        if game_describer is None:
+            parser = argparse.ArgumentParser(
+                description="Place holder args to init stuff."
+            )
+            parser.add_argument(
+                "--is_only_local_obs",
+                type=int,
+                default=1,
+                help="Whether only taking local observations, if is_only_local_obs = 1, only using local obs"
+            )
+            parser.add_argument(
+                "--max_episode_len",
+                type=int,
+                default=108000//6,
+                help="The maximum number of steps in an episode",
+            )
+            parser.add_argument(
+                "--frameskip",
+                type=int,
+                default=4,
+                help="The frameskip for atari environments",
+            )
+            args = parser.parse_args()
+            self.game_describer = atari.Pong_translator.GameDescriber(args)
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict, obs_translator, game_describer)
 
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
+        out = -1
         if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4", "5", "0"):
             if "Move left while hiting the ball" in response.lower():
                 out = 5
@@ -236,9 +263,9 @@ class PongAgent(TranslationAgent):
         elif digits[-1] in ("1", "2", "3", "4", "5", "0"):
             out = int(digits[-1])
         else:
-            print(f"TranslationAgent.extract_action({response}): cannot extract action. Return 0: Do nothing (NOOP)")
+            print(f"PongAgent.extract_action({response}): cannot extract action. Return 0: Do nothing (NOOP)")
             out = 0
         if out not in range(6):
-            print(f"TranslationAgent.extract_action({response}): out of bounds. Return 0: Do nothing (NOOP)")
+            print(f"The extracted actio is {out}, which is out of bounds. Return 0: Do nothing (NOOP)")
             out = 0
         return out

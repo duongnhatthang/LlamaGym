@@ -19,6 +19,7 @@ def get_agent(model, tokenizer, device, hyperparams):
     """
     # Create the agent with the specified parameters
     if hyperparams['env'] == "RepresentedSpaceInvaders-v0":
+        print("Creating SpaceInvadersAgent")
         agent = SpaceInvadersAgent(
             model=model,
             tokenizer=tokenizer,
@@ -34,6 +35,7 @@ def get_agent(model, tokenizer, device, hyperparams):
             }
         )
     elif hyperparams['env'] == "RepresentedPong-v0":
+        print("Creating PongAgent")
         agent = PongAgent(
             model=model,
             tokenizer=tokenizer,
@@ -55,8 +57,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        # "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         "generate/top_k": 0,
         "generate/temperature": 0.9,
         "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
-        "eps": 1#0.01,  # epsilon for exploration
+        "eps": 0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
@@ -113,7 +115,6 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                print(f"Step {n_step}: {agent.current_episode_messages}") # For debugging
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             agent.assign_reward(reward)
@@ -124,6 +125,7 @@ if __name__ == "__main__":
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
             terminals.append(int(done))
+            print(observation)
         break # temp for debugging
 
         episode_stats = {
