@@ -5,7 +5,6 @@ import argparse
 from collections import Counter
 
 class TranslationAgent(Agent):
-
     def __init__(self, model, tokenizer, device, generate_config_dict=None, ppo_config_dict=None, obs_translator=None, game_describer=None, 
                  reasoning_mode="COT", num_votes=3, num_cot_samples=5):
         # We'll store references needed for COT, MVOTE, and BEST
@@ -18,7 +17,7 @@ class TranslationAgent(Agent):
         elif game_describer:
             self.game_describer = game_describer
         super().__init__(model, tokenizer, device, generate_config_dict, ppo_config_dict)
-        
+
     def get_system_prompt(self) -> str:
         return f"You are an expert-level game player. {self.game_describer.describe_game()} {self.game_describer.describe_goal()} {self.game_describer.describe_action()}"
 
@@ -34,7 +33,7 @@ class TranslationAgent(Agent):
         For COT, we can simply append 'Think step by step.' to the system prompt
         or use any special token/hint you like.
         """
-        self.current_episode_messages[0]["content"] += "\nThink step by step."
+        self.current_episode_messages[-1]["content"] += "\nThink step by step."
 
     def _generate_single_response(self) -> str:
         """
