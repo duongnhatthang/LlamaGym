@@ -103,8 +103,12 @@ if __name__ == "__main__":
     }
 
     # d3rlpy supports both Gym and Gymnasium
-    env = GymCompatWrapper2(gym.make(hyperparams['env']))
-    eval_env = GymCompatWrapper2(gym.make(hyperparams['env']))
+    if "Represented" in hyperparams["env"]:
+        env = GymCompatWrapper2(gym.make(hyperparams['env']))
+        eval_env = GymCompatWrapper2(gym.make(hyperparams['env']))
+    else:
+        env = gym.make(hyperparams["env"])
+        eval_env = gym.make(hyperparams["env"])
     # fix seed
     d3rlpy.seed(hyperparams['seed'])
     d3rlpy.envs.seed_env(env, hyperparams['seed'])
