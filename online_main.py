@@ -43,17 +43,15 @@ def online_training(
             with open(hyperparams['data_path'], 'rb') as f:
                 dataset = pickle.load(f)
 
-            # Verify dataset structure
-            if hasattr(dataset, 'episodes'):
-                # Calculate safe episode count to load
-                valid_episodes = min(hyperparams['n_pretrain_eps'], len(dataset.episodes))
-
-                # Append episodes with transition validation
-                for episode in dataset.episodes[:valid_episodes]:
-                    if len(episode) > 0 and hasattr(episode, 'rewards'):
-                        buffer.append_episode(episode)
-                    else:
-                        print(f"Skipping invalid episode: {episode}")
+            # Append episodes with transition validation
+            count = 0
+            for episode in dataset.episodes:
+                if len(episode) > 0 and hasattr(episode, 'rewards'):
+                    buffer.append_episode(episode)
+                    count += 1
+                else:
+                    print(f"Skipping invalid episode: {episode}")
+            hyperparams['n_steps'] = hyperparams['n_steps']-count*hyperparams['max_episode_len']
         except Exception as e:
             print(f"Error loading dataset: {str(e)}")
 
@@ -89,12 +87,12 @@ if __name__ == "__main__":
         "n_episodes": 200,#5000,
         "max_episode_len": 50, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
-        "n_exp": 1,
+        "n_exp": 5,
         "n_pretrain_eps": 10,
-        "n_online_eps": 490,
+        "n_online_eps": 240,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
-        "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
+        "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
         "model_path": None,#'d3rlpy_loss/DoubleDQN_online_20250331153346/model_600000.d3',
         "batch_size":2048, #Test smaller batch size: 32, 64. May be noisier
         "learning_rate":1e-4,
@@ -122,18 +120,26 @@ if __name__ == "__main__":
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
         end_epsilon=0.1,
-        duration=20000,
+        duration=10000,
     )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
     hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
     hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
-    for i in range(hyperparams['n_exp']):
-        # onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, explorer)
-        episodes = online_training(env, eval_env, hyperparams, explorer) # return buffer.episodes
-        with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_exp_'+str(i)+'.pkl', 'wb') as file:
-            pickle.dump(episodes, file)
+    cache = {}
 
-    # with open('data/finetune_RepresentedPong_Neps_500.pkl', 'rb') as file:
-    #     onl_rewards_eps_decay = pickle.load(file)
+    hyperparams['data_path'] = 'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl'
+    for i in range(hyperparams['n_exp']):
+        cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+        
+    hyperparams['data_path'] = 'data/CartPole_Qwen2.5-32B-Instruct_Neps_10_20250406040150.pkl'
+    for i in range(hyperparams['n_exp']):
+        cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+
+    hyperparams['data_path'] =  None
+    for i in range(hyperparams['n_exp']):
+        cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+
+    with open('data/cache_'+hyperparams["env"].split('-')[0]+'.pkl', 'wb') as file:
+        pickle.dump(cache, file)
