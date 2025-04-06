@@ -84,14 +84,14 @@ def online_training(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "RepresentedPong-v0",
+        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
-        "max_episode_len": 500, # Around 10h per 100k steps in Leviathan server
+        "max_episode_len": 50, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 1,
-        "n_pretrain_eps": 500,
-        "n_online_eps": 500,
+        "n_pretrain_eps": 10,
+        "n_online_eps": 490,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/RepresentedPong_Qwen2.5-7B-Instruct_Neps_500.pkl',
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
         end_epsilon=0.1,
-        duration=1000000,
+        duration=20000,
     )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
@@ -128,8 +128,8 @@ if __name__ == "__main__":
     for i in range(hyperparams['n_exp']):
         # onl_rewards_eps_decay[:,i]=online_training(env, eval_env, hyperparams, explorer)
         episodes = online_training(env, eval_env, hyperparams, explorer) # return buffer.episodes
-        # with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_exp_'+str(i)+'.pkl', 'wb') as file:
-        #     pickle.dump(episodes, file)
+        with open('data/finetune_'+hyperparams["env"].split('-')[0]+'_exp_'+str(i)+'.pkl', 'wb') as file:
+            pickle.dump(episodes, file)
 
     # with open('data/finetune_RepresentedPong_Neps_500.pkl', 'rb') as file:
     #     onl_rewards_eps_decay = pickle.load(file)
