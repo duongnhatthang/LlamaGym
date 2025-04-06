@@ -191,7 +191,7 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-14B-Instruct",
         "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
@@ -203,13 +203,13 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 2,#5000, # 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
+        "n_episodes": 10,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
         "generate/max_new_tokens": 2000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 500,
+        "max_episode_len": 50,
         "eps": 0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
@@ -251,13 +251,12 @@ if __name__ == "__main__":
         done = False
         n_step = 0
         while not done:
-            # rand = bool(np.random.binomial(n=1, p=eps_list[counter]))
             rand = bool(np.random.binomial(n=1, p=hyperparams["eps"]))
             if rand:
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                print(agent.current_episode_messages)
+                # print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             agent.assign_reward(reward)
@@ -273,7 +272,7 @@ if __name__ == "__main__":
         # COT 413 for 0.5B, 500 w/ -20 score for 7B, 500 w/ -17 score for 32B (sometimes 1-20)
         # MajorityVoting: 382 for 7B w/ temp=0.9, N=3, 382 for 7B w/ temp=0.9, N=5
         # Best-of-N: 382 for 7B
-        break # for debugging purposes, remove this to run full episodes
+        # break # for debugging purposes, remove this to run full episodes
 
         episode_stats = {
             "episode": episode,
@@ -295,5 +294,5 @@ if __name__ == "__main__":
         terminals=np.array(terminals),
     )
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    # with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'_'+timestamp+'.pkl', 'wb') as file:
-    #     pickle.dump(dataset, file)
+    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'_'+timestamp+'.pkl', 'wb') as file:
+        pickle.dump(dataset, file)
