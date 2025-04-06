@@ -1,6 +1,7 @@
 import os
 from tqdm import trange
 import wandb
+from datetime import datetime
 
 from transformers import AutoTokenizer
 from peft import LoraConfig
@@ -57,7 +58,7 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        "model_name": "Qwen/Qwen2.5-32B-Instruct",
         # "model_name": "Qwen/Qwen2.5-14B-Instruct",
         "env": "RepresentedPong-v0", #"RepresentedSpaceInvaders-v0",
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 5,#5000, # 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
+        "n_episodes": 2,#5000, # 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
         "generate/max_new_tokens": 2000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
@@ -126,7 +127,7 @@ if __name__ == "__main__":
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
             terminals.append(int(done))
-        print(n_step, observation, action, reward)#length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B, 14B, 32B (just move up)
+            print(n_step, observation, action, reward)#length = 462 with rand, 474 for 0.5B (slight better with modified action prompt), 382 with 7B, 14B, 32B (just move up)
         # 412 for 32B with suggested policy
         # COT 413 for 0.5B, 500 w/ -20 score for 7B, 500 w/ -17 score for 32B
         # MajorityVoting: 382 for 7B w/ temp=0.9, N=3, 382 for 7B w/ temp=0.9, N=5
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         train_stats = agent.terminate_episode(train=False)
         episode_stats.update(train_stats)
         # wandb.log(episode_stats)
-        if counter > 0 and counter % int(hyperparams["n_episodes"]//100) == 0:
+        if counter > 0 and counter % int(hyperparams["n_episodes"]%100) == 0:
             print(f"Episode {counter}, sum return: {sum(agent.current_episode_rewards)}")
         counter += 1
 
@@ -152,5 +153,6 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'.pkl', 'wb') as file:
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'_'+timestamp+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
