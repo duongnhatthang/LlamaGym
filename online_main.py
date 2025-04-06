@@ -44,14 +44,13 @@ def online_training(
                 dataset = pickle.load(f)
 
             # Append episodes with transition validation
-            count = 0
+            n_pretrain_steps = 0
             for episode in dataset.episodes:
                 if len(episode) > 0 and hasattr(episode, 'rewards'):
                     buffer.append_episode(episode)
-                    count += 1
+                    n_pretrain_steps += len(episode)
                 else:
                     print(f"Skipping invalid episode: {episode}")
-            hyperparams['n_steps'] = hyperparams['n_steps']-count*hyperparams['max_episode_len']
         except Exception as e:
             print(f"Error loading dataset: {str(e)}")
 
@@ -63,7 +62,7 @@ def online_training(
         buffer=buffer,
         explorer=explorer,
         eval_env=eval_env,
-        n_steps=hyperparams['n_steps'],
+        n_steps=hyperparams['n_steps']-n_pretrain_steps,
         n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
         # update_interval=update_interval,
         # experiment_name="online_training",
@@ -120,7 +119,7 @@ if __name__ == "__main__":
     explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
         start_epsilon=1,
         end_epsilon=0.1,
-        duration=10000,
+        duration=5000,
     )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
