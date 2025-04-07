@@ -134,13 +134,13 @@ if __name__ == "__main__":
 
     cache = {}
 
-    with open(f'models/ddqn_pretrain_32b_1000_steps.pkl', 'rb') as file:
+    with open(f'models/CartPole_ddqn_pretrain_32b_1000_steps.pkl', 'rb') as file:
         pretrain_32b_1000_dqn = pickle.load(file)
-    with open(f'models/ddqn_pretrain_7b_1000_steps.pkl', 'rb') as file:
+    with open(f'models/CartPole_ddqn_pretrain_7b_1000_steps.pkl', 'rb') as file:
         pretrain_7b_1000_dqn = pickle.load(file)
-    with open(f'models/ddqn_pretrain_32b_3000_steps.pkl', 'rb') as file:
+    with open(f'models/CartPole_ddqn_pretrain_32b_3000_steps.pkl', 'rb') as file:
         pretrain_32b_3000_dqn = pickle.load(file)
-    with open(f'models/ddqn_pretrain_7b_3000_steps.pkl', 'rb') as file:
+    with open(f'models/CartPole_ddqn_pretrain_7b_3000_steps.pkl', 'rb') as file:
         pretrain_7b_3000_dqn = pickle.load(file)
 
     tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
