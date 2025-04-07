@@ -193,7 +193,7 @@ if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-14B-Instruct",
-        "env": "MountainCar-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -203,14 +203,14 @@ if __name__ == "__main__":
         "load_in_8bit": True,
         "batch_size": 4,
         "seed": 42069,
-        "n_episodes": 10,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
+        "n_episodes": 30,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
         "generate/max_new_tokens": 2000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 200, # 50 for CartPole, 500 for Pong, 200 for MountainCar (optimal 110)
-        "eps": 0#0.01,  # epsilon for exploration
+        "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110)
+        "eps": 0.1#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
@@ -274,14 +274,14 @@ if __name__ == "__main__":
         # Best-of-N: 382 for 7B
         # break # for debugging purposes, remove this to run full episodes
 
-        episode_stats = {
-            "episode": episode,
-            "sum_return": sum(agent.current_episode_rewards),
-            "message_ct": len(agent.current_episode_messages),
-            "episode_messages": agent.current_episode_messages,
-        }
-        train_stats = agent.terminate_episode(train=False)
-        episode_stats.update(train_stats)
+        # episode_stats = {
+        #     "episode": episode,
+        #     "sum_return": sum(agent.current_episode_rewards),
+        #     "message_ct": len(agent.current_episode_messages),
+        #     "episode_messages": agent.current_episode_messages,
+        # }
+        # train_stats = agent.terminate_episode(train=False)
+        # episode_stats.update(train_stats)
         # wandb.log(episode_stats)
         if counter > 0 and counter % int(hyperparams["n_episodes"]%100) == 0:
             print(f"Episode {counter}, sum return: {sum(agent.current_episode_rewards)}")

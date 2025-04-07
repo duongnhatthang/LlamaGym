@@ -53,6 +53,8 @@ def online_training(
                     n_pretrain_eps -= 1
                 else:
                     print(f"Skipping invalid episode: {episode}")
+                if n_pretrain_eps <= 0:
+                    break
         except Exception as e:
             print(f"Error loading dataset: {str(e)}")
 
@@ -93,8 +95,8 @@ if __name__ == "__main__":
         "max_episode_len": 50, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 10,
-        "n_online_eps": 90,
+        "n_pretrain_eps": 30,
+        "n_online_eps": 170,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
