@@ -209,7 +209,7 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 50,
+        "max_episode_len": 200, # 50 for CartPole, 500 for Pong, 200 for MountainCar (optimal 110)
         "eps": 0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
