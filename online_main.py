@@ -88,7 +88,7 @@ if __name__ == "__main__":
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 10,
-        "n_online_eps": 240,
+        "n_online_eps": 90,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
