@@ -93,9 +93,9 @@ if __name__ == "__main__":
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
         "model_path": None,#'d3rlpy_loss/DoubleDQN_online_20250331153346/model_600000.d3',
-        "batch_size":2048, #Test smaller batch size: 32, 64. May be noisier
-        "learning_rate":1e-4,
-        "gamma":0.999,
+        "batch_size":256, #Test smaller batch size: 32, 64. May be noisier
+        "learning_rate":5e-5,
+        "gamma":0.99,
         "target_update_interval":1000 #Test with 1k, 2k, 5k
     }
 
