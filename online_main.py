@@ -128,13 +128,34 @@ if __name__ == "__main__":
     #     duration=5000,
     # )
 
-    hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
-    hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
-    hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
+    # hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
+    # hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
+    # hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
     cache = {}
 
+    with open(f'models/ddqn_pretrain_32b_1000_steps.pkl', 'rb') as file:
+        pretrain_32b_1000_dqn = pickle.load(file)
+    with open(f'models/ddqn_pretrain_7b_1000_steps.pkl', 'rb') as file:
+        pretrain_7b_1000_dqn = pickle.load(file)
+    with open(f'models/ddqn_pretrain_32b_3000_steps.pkl', 'rb') as file:
+        pretrain_32b_3000_dqn = pickle.load(file)
+    with open(f'models/ddqn_pretrain_7b_3000_steps.pkl', 'rb') as file:
+        pretrain_7b_3000_dqn = pickle.load(file)
+
+    tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
     hyperparams['data_path'] =  None
+    hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
+    for i in range(hyperparams['n_exp']):
+        cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
+    for i in range(hyperparams['n_exp']):
+        cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
+    for i in range(hyperparams['n_exp']):
+        cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
+    for i in range(hyperparams['n_exp']):
+        cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
+
+    hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
     for i in range(hyperparams['n_exp']):
         cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
