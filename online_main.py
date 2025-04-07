@@ -5,6 +5,7 @@ import pickle
 
 import matplotlib.pyplot as plt
 from env.atari.represented_atari_game import GymCompatWrapper2
+from d3rlpy.metrics import EnvironmentEvaluator
 
 
 def online_training(
@@ -36,7 +37,7 @@ def online_training(
         env=env,
     )
 
-    n_pretrain_steps = 0
+    n_pretrain_eps = hyperparams['n_pretrain_eps']
     # Load and merge offline data with type-checking
     if hyperparams['data_path']:
         try:
@@ -48,7 +49,8 @@ def online_training(
             for episode in dataset.episodes:
                 if len(episode) > 0 and hasattr(episode, 'rewards'):
                     buffer.append_episode(episode)
-                    n_pretrain_steps += len(episode)
+                    # n_pretrain_steps += len(episode)
+                    n_pretrain_eps -= 1
                 else:
                     print(f"Skipping invalid episode: {episode}")
         except Exception as e:
@@ -57,38 +59,42 @@ def online_training(
     # Configure training with safety checks
     if buffer.transition_count == 0:
         print("Empty buffer (just Online training)!")
-    dqn.fit_online(
-        env=env,
-        buffer=buffer,
-        explorer=explorer,
-        eval_env=eval_env,
-        n_steps=hyperparams['n_steps']-n_pretrain_steps,
-        n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
-        # update_interval=update_interval,
-        # experiment_name="online_training",
-    )
+
+    rewards = []
+    for i in range(n_pretrain_eps+hyperparams['n_online_eps']):
+        # Ensure we have enough transitions in buffer before training
+        dqn.fit_online(
+            env=env,
+            buffer=buffer,
+            explorer=explorer,
+            # eval_env=eval_env,
+            n_steps=hyperparams['max_episode_len'],
+            # n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
+            # update_interval=update_interval,
+            # experiment_name="online_training",
+        )
+        env_evaluator = EnvironmentEvaluator(eval_env)
+        rewards.append(env_evaluator(dqn, dataset=None))
 
     # Extract rewards safely
-    # rewards = []
     # for episode in buffer.episodes: # Only collect the online data
     #     rewards.append(episode.compute_return())
 
     # if hyperparams['cut_off_threshold']:
     #     start, end = hyperparams['cut_off_threshold']
     #     rewards = rewards[start:end]
-    # return rewards
-    return buffer.episodes
+    return rewards
 
 if __name__ == "__main__":
     hyperparams = {
         "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
-        "n_episodes": 200,#5000,
-        "max_episode_len": 50, # Around 10h per 100k steps in Leviathan server
+        "n_episodes": 20,#5000,
+        "max_episode_len": 5, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 10,
-        "n_online_eps": 90,
+        "n_pretrain_eps": 1,
+        "n_online_eps": 9,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -115,12 +121,12 @@ if __name__ == "__main__":
     # onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
 
     # setup explorers
-    # explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
-    explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
-        start_epsilon=1,
-        end_epsilon=0.1,
-        duration=5000,
-    )
+    explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
+    # explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
+    #     start_epsilon=1,
+    #     end_epsilon=0.1,
+    #     duration=5000,
+    # )
 
     hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
     hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
