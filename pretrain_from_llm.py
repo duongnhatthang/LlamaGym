@@ -7,14 +7,14 @@ import pandas as pd
 from env.atari.represented_atari_game import GymCompatWrapper2
 
 hyperparams = {
-        "env": "MountainCar-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 10,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 10,
-        "n_online_eps": 90,
+        "n_pretrain_eps": 30,
+        "n_online_eps": 170,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -51,10 +51,10 @@ d3rlpy.seed(hyperparams["seed"])
 d3rlpy.envs.seed_env(env, hyperparams["seed"])
 d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-with open(f"data/{hyperparams["env"].split("-")[0]}_Qwen2.5-32B-Instruct_Neps_10_20250407125034.pkl", 'rb') as file:
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250408120007_withEps.pkl", 'rb') as file:
     Qwen_32B_dataset = pickle.load(file)
-    
-with open(f"data/{hyperparams["env"].split("-")[0]}_Qwen2.5-7B-Instruct_Neps_10_20250407113942.pkl", 'rb') as file:
+
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250408032240_withEps.pkl", 'rb') as file:
     Qwen_7B_dataset = pickle.load(file)
 
 Qwen_32B_rewards = []
@@ -83,9 +83,9 @@ pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
 hyperparams["target_update_interval"] = 200
 # start offline training
 pretrain_7b_dqn.fit(Qwen_7B_dataset, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_withEps.pkl', 'wb') as file:
     pickle.dump(pretrain_7b_dqn, file)
 
 pretrain_32b_dqn.fit(Qwen_32B_dataset, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_withEps.pkl', 'wb') as file:
     pickle.dump(pretrain_32b_dqn, file)
