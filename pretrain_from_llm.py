@@ -51,10 +51,10 @@ d3rlpy.seed(hyperparams["seed"])
 d3rlpy.envs.seed_env(env, hyperparams["seed"])
 d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-with open('data/MountainCar_Qwen2.5-32B-Instruct_Neps_10_20250407125034.pkl', 'rb') as file:
+with open(f"data/{hyperparams["env"].split("-")[0]}_Qwen2.5-32B-Instruct_Neps_10_20250407125034.pkl", 'rb') as file:
     Qwen_32B_dataset = pickle.load(file)
     
-with open('data/MountainCar_Qwen2.5-7B-Instruct_Neps_10_20250407113942.pkl', 'rb') as file:
+with open(f"data/{hyperparams["env"].split("-")[0]}_Qwen2.5-7B-Instruct_Neps_10_20250407113942.pkl", 'rb') as file:
     Qwen_7B_dataset = pickle.load(file)
 
 Qwen_32B_rewards = []
