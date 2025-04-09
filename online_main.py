@@ -161,11 +161,11 @@ if __name__ == "__main__":
     for i in range(hyperparams['n_exp']):
         cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
-    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250408032240_withEps.pkl"
+    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl"
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
         
-    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250408120007_withEps.pkl"
+    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408120007_withEps.pkl"
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
