@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 import d3rlpy
 import pickle
+from tqdm import trange
 
 import matplotlib.pyplot as plt
 from env.atari.represented_atari_game import GymCompatWrapper2
@@ -63,7 +64,7 @@ def online_training(
         print("Empty buffer (just Online training)!")
 
     rewards = []
-    for i in range(n_pretrain_eps+hyperparams['n_online_eps']):
+    for _ in trange(n_pretrain_eps+hyperparams['n_online_eps']):
         # Ensure we have enough transitions in buffer before training
         dqn.fit_online(
             env=env,
@@ -77,14 +78,6 @@ def online_training(
         )
         env_evaluator = EnvironmentEvaluator(eval_env)
         rewards.append(env_evaluator(dqn, dataset=None))
-
-    # Extract rewards safely
-    # for episode in buffer.episodes: # Only collect the online data
-    #     rewards.append(episode.compute_return())
-
-    # if hyperparams['cut_off_threshold']:
-    #     start, end = hyperparams['cut_off_threshold']
-    #     rewards = rewards[start:end]
     return rewards
 
 if __name__ == "__main__":

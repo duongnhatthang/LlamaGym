@@ -1,6 +1,5 @@
 import os
 from tqdm import trange
-import wandb
 from datetime import datetime
 import argparse
 
