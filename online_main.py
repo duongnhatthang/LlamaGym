@@ -88,8 +88,8 @@ if __name__ == "__main__":
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 30,
-        "n_online_eps": 170, #10-290 for mountainCar, 30-170 for CartPole
+        "n_pretrain_eps": 10,
+        "n_online_eps": 140, #10-290 for mountainCar, 30-170 for CartPole
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -129,13 +129,13 @@ if __name__ == "__main__":
 
     cache = {}
 
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
         pretrain_32b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
         pretrain_7b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
         pretrain_32b_3000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
         pretrain_7b_3000_dqn = pickle.load(file)
 
     tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
@@ -162,5 +162,5 @@ if __name__ == "__main__":
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
-    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_withEps.pkl', 'wb') as file:
+    with open(f'data/cache_{hyperparams["env"].split("-")[0]}.pkl', 'wb') as file:
         pickle.dump(cache, file)
