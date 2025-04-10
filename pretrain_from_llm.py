@@ -51,10 +51,10 @@ d3rlpy.seed(hyperparams["seed"])
 d3rlpy.envs.seed_env(env, hyperparams["seed"])
 d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250408120007_withEps.pkl", 'rb') as file:
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file:
     Qwen_32B_dataset = pickle.load(file)
 
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250408032240_withEps.pkl", 'rb') as file:
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file:
     Qwen_7B_dataset = pickle.load(file)
 
 Qwen_32B_rewards = []
@@ -83,9 +83,9 @@ pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
 hyperparams["target_update_interval"] = 200
 # start offline training
 pretrain_7b_dqn.fit(Qwen_7B_dataset, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_withEps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps.pkl', 'wb') as file:
     pickle.dump(pretrain_7b_dqn, file)
 
 pretrain_32b_dqn.fit(Qwen_32B_dataset, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_withEps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps.pkl', 'wb') as file:
     pickle.dump(pretrain_32b_dqn, file)
