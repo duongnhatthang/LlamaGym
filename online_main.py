@@ -162,5 +162,5 @@ if __name__ == "__main__":
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
-    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams['n_pretrain_eps']}.pkl', 'wb') as file:
+    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
         pickle.dump(cache, file)
