@@ -84,7 +84,7 @@ class GameDescriber:
         return "Type '1' to move south (down), '2' to move north (up), '3' to move east (right), " \
                "'4' to move west (left), '5' to pick up the passenger or '6' to drop off the passenger. " \
                "Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4, 5, 6]. " \
-               "You can plan the sequence of actions but should only return the current action number."
+               "You should return the current action number, not the full sequence."
 
 class TransitionTranslator(ObsTranslator):
     def translate(self, infos, is_current=False):
