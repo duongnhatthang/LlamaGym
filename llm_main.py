@@ -192,7 +192,7 @@ if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-14B-Instruct",
-        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110)
+        "max_episode_len": 100, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110)
         "eps": 0.0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
