@@ -209,7 +209,7 @@ if __name__ == "__main__":
         "generate/top_k": 0,
         "generate/temperature": 0.9,
         "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110)
-        "eps": 0.1#0.01,  # epsilon for exploration
+        "eps": 0.0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
