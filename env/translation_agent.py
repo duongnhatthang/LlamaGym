@@ -325,7 +325,7 @@ class CliffWalkingAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
         out = -1
-        if len(digits) == 0 or digits[-1] not in ("1", "2", "3"):
+        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4"):
             if "Up" in response.lower():
                 out = 1
             elif "Right" in response.lower():
@@ -348,7 +348,7 @@ class FrozenLakeAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
         out = -1
-        if len(digits) == 0 or digits[-1] not in ("1", "2", "3"):
+        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4"):
             if "Up" in response.lower():
                 out = 4
             elif "Right" in response.lower():
@@ -371,7 +371,7 @@ class TaxiAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
         out = -1
-        if len(digits) == 0 or digits[-1] not in ("1", "2", "3"):
+        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4", "5", "6"):
             if "Right" in response.lower() or "East" in response.lower():
                 out = 3
             elif "Down" in response.lower() or "South" in response.lower():
