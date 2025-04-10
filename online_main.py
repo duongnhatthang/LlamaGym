@@ -74,7 +74,7 @@ def online_training(
             n_steps=hyperparams['max_episode_len'],
             # n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
             # update_interval=update_interval,
-            # experiment_name="online_training",
+            experiment_name="online_training",
         )
         env_evaluator = EnvironmentEvaluator(eval_env)
         rewards.append(env_evaluator(dqn, dataset=None))
