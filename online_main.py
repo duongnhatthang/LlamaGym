@@ -104,7 +104,7 @@ if __name__ == "__main__":
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 20,
-        "n_online_eps": 130, #10-290 for mountainCar, 30-170 for CartPole
+        "n_online_eps": 130, #10-290 for mountainCar, 30-170 for CartPole, 30-270 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',

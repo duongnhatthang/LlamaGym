@@ -322,6 +322,11 @@ class MountainCarAgent(TranslationAgent):
         return out-1  # Choose index start from 1 since LLM bias toward action 0. Shift to 0-based index for gym compatibility.
 
 class FrozenLakeAgent(TranslationAgent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.env_hist = None
+        self.env_hist_prompt = None
+
     def get_system_prompt(self) -> str:
         original_sys_prompt = super().get_system_prompt()
         if self.env_hist is None:
