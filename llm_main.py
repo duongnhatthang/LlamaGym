@@ -192,7 +192,7 @@ if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-14B-Instruct",
-        "env": "Taxi-v3", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -258,6 +258,8 @@ if __name__ == "__main__":
                 print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
+            if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
+                agent.add_env_hist(observation, reward)
             agent.assign_reward(reward)
             observations.append(observation)
             actions.append(action)

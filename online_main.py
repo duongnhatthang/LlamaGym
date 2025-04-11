@@ -8,7 +8,20 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from env.atari.represented_atari_game import GymCompatWrapper2
 from d3rlpy.metrics import EnvironmentEvaluator
+import gymnasium.spaces
 
+class OneHotWrapper(gym.ObservationWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        assert isinstance(env.observation_space, gym.spaces.Discrete), "Only Discrete observation spaces are supported."
+        self.observation_space = gym.spaces.Box(
+            low=0, high=1, shape=(env.observation_space.n,), dtype=int
+        )
+
+    def observation(self, obs):
+        one_hot = np.zeros(self.observation_space.shape, dtype=int)
+        one_hot[obs] = 1
+        return one_hot
 
 def online_training(
     env,
@@ -106,6 +119,9 @@ if __name__ == "__main__":
     if "Represented" in hyperparams["env"]:
         env = GymCompatWrapper2(gym.make(hyperparams['env']))
         eval_env = GymCompatWrapper2(gym.make(hyperparams['env']))
+    elif isinstance(gym.make(hyperparams["env"]).observation_space, gym.spaces.Discrete):
+        env = OneHotWrapper(gym.make(hyperparams["env"]))
+        eval_env = OneHotWrapper(gym.make(hyperparams["env"]))
     else:
         env = gym.make(hyperparams["env"])
         eval_env = gym.make(hyperparams["env"])
