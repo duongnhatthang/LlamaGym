@@ -191,7 +191,7 @@ def get_agent(model, tokenizer, device, hyperparams):
 if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        # "model_name": "Qwen/Qwen2.5-14B-Instruct",
+        # "model_name": "Qwen/Qwen2.5-32B-Instruct",
         "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,

@@ -16,11 +16,11 @@ class OneHotWrapper(gym.ObservationWrapper):
         assert isinstance(env.observation_space, gym.spaces.Discrete), "Only Discrete observation spaces are supported."
         self.n = env.observation_space.n
         self.observation_space = gym.spaces.Box(
-            low=0, high=1, shape=(self.n,), dtype=np.float32
+            low=0.0, high=1.0, shape=(self.n,), dtype=np.float32
         )
 
     def observation(self, obs):
-        one_hot = np.zeros(self.n, dtype=np.float32)
+        one_hot = np.zeros((self.n,), dtype=np.float32)
         one_hot[obs] = 1.0
         return one_hot
 
