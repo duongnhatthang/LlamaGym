@@ -67,7 +67,7 @@ class GameDescriber:
                 "\n '3': Move right, which means ('x', 'y+1')," \
                 "\n '4': Move up, which means trying to step into ('x-1', 'y')." \
                 " Ensure you only provide the action number from the valid action list, i.e., [1, 2, 3, 4]. " \
-               "You should return the current action number, not the target's coordinator.")
+               "Do not return the target's coordinator.")
 
 class TransitionTranslator(ObsTranslator):
     def translate(self, infos, is_current=False):
