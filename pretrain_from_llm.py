@@ -32,18 +32,18 @@ n_online_eps = hyperparams["n_online_eps"]
 n_exp = hyperparams["n_exp"]
 hyperparams["target_update_interval"] = 200 # For pretraining, leave the original value of 1000 for online training
 
-# d3rlpy supports both Gym and Gymnasium
-if "Represented" in hyperparams["env"]:
-    env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-    eval_env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-else:
-    env = gym.make(hyperparams["env"])
-    eval_env = gym.make(hyperparams["env"])
+# # d3rlpy supports both Gym and Gymnasium
+# if "Represented" in hyperparams["env"]:
+#     env = GymCompatWrapper2(gym.make(hyperparams["env"]))
+#     eval_env = GymCompatWrapper2(gym.make(hyperparams["env"]))
+# else:
+#     env = gym.make(hyperparams["env"])
+#     eval_env = gym.make(hyperparams["env"])
 
 # fix seed
 d3rlpy.seed(hyperparams["seed"])
-d3rlpy.envs.seed_env(env, hyperparams["seed"])
-d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
+# d3rlpy.envs.seed_env(env, hyperparams["seed"])
+# d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
 with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLake
 # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
@@ -53,13 +53,16 @@ with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_
 # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file: #CartPole with Eps
     Qwen_7B_dataset = pickle.load(file)
 
+def ensure_numpy_array(x, hyperparams=hyperparams):
+    if isinstance(gym.make(hyperparams["env"]).observation_space, gym.spaces.Discrete):
+        # Convert discrete observations to one-hot encoded arrays
+        return np.eye(gym.make(hyperparams["env"]).observation_space.n)[x]
+    if not isinstance(x, np.ndarray):
+        return np.array([x])
+    return x
 def get_new_dataset(dataset, n_eps):
     observations, actions, rewards, terminals = [], [], [], []
     # Extract observations, actions, rewards, and terminals from the original dataset
-    def ensure_numpy_array(x):
-        if not isinstance(x, np.ndarray):
-            return np.array([x])
-        return x
     for episode in dataset.episodes[:n_eps]:
         observations += [ensure_numpy_array(o) for o in episode.observations]  # Ensure observations are numpy arrays
         actions += [a for a in episode.actions]
