@@ -3,6 +3,7 @@ import numpy as np
 import d3rlpy
 import pickle
 from tqdm import trange
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 from env.atari.represented_atari_game import GymCompatWrapper2
@@ -64,6 +65,7 @@ def online_training(
         print("Empty buffer (just Online training)!")
 
     rewards = []
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     for _ in trange(n_pretrain_eps+hyperparams['n_online_eps']):
         # Ensure we have enough transitions in buffer before training
         dqn.fit_online(
@@ -74,7 +76,7 @@ def online_training(
             n_steps=hyperparams['max_episode_len'],
             # n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
             # update_interval=update_interval,
-            experiment_name="online_training",
+            experiment_name=f"{timestamp}_online_training",
         )
         env_evaluator = EnvironmentEvaluator(eval_env)
         rewards.append(env_evaluator(dqn, dataset=None))
@@ -88,8 +90,8 @@ if __name__ == "__main__":
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 10,
-        "n_online_eps": 140, #10-290 for mountainCar, 30-170 for CartPole
+        "n_pretrain_eps": 20,
+        "n_online_eps": 130, #10-290 for mountainCar, 30-170 for CartPole
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
