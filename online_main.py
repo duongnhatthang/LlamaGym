@@ -14,13 +14,14 @@ class OneHotWrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
         assert isinstance(env.observation_space, gym.spaces.Discrete), "Only Discrete observation spaces are supported."
+        self.n = env.observation_space.n
         self.observation_space = gym.spaces.Box(
-            low=0, high=1, shape=(env.observation_space.n,), dtype=int
+            low=0, high=1, shape=(self.n,), dtype=np.float32
         )
 
     def observation(self, obs):
-        one_hot = np.zeros(self.observation_space.shape, dtype=int)
-        one_hot[obs] = 1
+        one_hot = np.zeros(self.n, dtype=np.float32)
+        one_hot[obs] = 1.0
         return one_hot
 
 def online_training(
@@ -131,8 +132,6 @@ if __name__ == "__main__":
     d3rlpy.envs.seed_env(eval_env, hyperparams['seed'])
     np.random.seed(hyperparams['seed'])
 
-    # onl_rewards_eps_decay = np.zeros((hyperparams['n_episodes'], hyperparams['n_exp']))
-
     # setup explorers
     explorer = d3rlpy.algos.ConstantEpsilonGreedy(hyperparams['eps'])
     # explorer = d3rlpy.algos.LinearDecayEpsilonGreedy(
@@ -140,10 +139,6 @@ if __name__ == "__main__":
     #     end_epsilon=0.1,
     #     duration=5000,
     # )
-
-    # hyperparams['n_steps'] = int(hyperparams['n_episodes']*hyperparams['max_episode_len']) # rough calculation
-    # hyperparams['n_steps_per_epoch'] = int(max(1, hyperparams['n_steps']//50))
-    # hyperparams['cut_off_threshold'] = (0,hyperparams['n_episodes'])
 
     cache = {}
 

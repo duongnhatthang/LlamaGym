@@ -93,9 +93,9 @@ pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
 
 # start offline training
 pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
     pickle.dump(pretrain_7b_dqn, file)
 
 pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'wb') as file:
+with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
     pickle.dump(pretrain_32b_dqn, file)
