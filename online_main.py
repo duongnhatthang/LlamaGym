@@ -97,14 +97,14 @@ def online_training(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 20,
-        "n_online_eps": 130, #10-290 for mountainCar, 30-170 for CartPole, 30-270 for FrozenLake
+        "n_pretrain_eps": 30,
+        "n_online_eps": 270, #10-290 for mountainCar, 30-170 for CartPole, 30-270 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -147,13 +147,13 @@ if __name__ == "__main__":
 
     cache = {}
 
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
         pretrain_32b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
         pretrain_7b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
         pretrain_32b_3000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}_eps.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
         pretrain_7b_3000_dqn = pickle.load(file)
 
     tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
@@ -173,10 +173,12 @@ if __name__ == "__main__":
         cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
     hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl"
+    # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl" #CartPole with Eps
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
         
     hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408120007_withEps.pkl"
+    # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408120007_withEps.pkl" #CartPole with Eps
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
