@@ -149,7 +149,7 @@ def get_agent(model, tokenizer, device, hyperparams):
         )
     elif hyperparams['env'] == "CliffWalking-v0":
         print("Creating CliffWalkingAgent")
-        agent = translation_agent.CartPoleAgent(
+        agent = translation_agent.CliffWalkingAgent(
             model=model,
             tokenizer=tokenizer,
             device=device,
@@ -255,7 +255,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                # print(agent.current_episode_messages)
+                print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
