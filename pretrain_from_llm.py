@@ -56,8 +56,12 @@ with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_
 def get_new_dataset(dataset, n_eps):
     observations, actions, rewards, terminals = [], [], [], []
     # Extract observations, actions, rewards, and terminals from the original dataset
+    def ensure_numpy_array(x):
+        if not isinstance(x, np.ndarray):
+            return np.array([x])
+        return x
     for episode in dataset.episodes[:n_eps]:
-        observations += [o for o in episode.observations]
+        observations += [ensure_numpy_array(o) for o in episode.observations]  # Ensure observations are numpy arrays
         actions += [a for a in episode.actions]
         rewards += [r for r in episode.rewards]
         terminals += [0] * (len(episode.rewards) - 1) + [1] # Add terminal flag for the last step
