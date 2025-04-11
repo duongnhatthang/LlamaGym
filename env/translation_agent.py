@@ -323,9 +323,9 @@ class MountainCarAgent(TranslationAgent):
 
 class FrozenLakeAgent(TranslationAgent):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.env_hist = None
         self.env_hist_prompt = None
+        super().__init__(*args, **kwargs)
 
     def get_system_prompt(self) -> str:
         original_sys_prompt = super().get_system_prompt()
