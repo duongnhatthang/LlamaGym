@@ -387,13 +387,10 @@ class CliffWalkingAgent(FrozenLakeAgent):
         nrows = 12
         if self.env_hist is None:
             self.env_hist = {}
-            self.repeat_hist = {}
         if reward not in self.env_hist.keys():
             self.env_hist[reward] = [observation]
-            self.repeat_hist[observation] = 1
         else:
             self.env_hist[reward] += [observation]
-            self.repeat_hist[observation] += 1
         self.env_hist_prompt = "Environment history: "
         for reward, locations in self.env_hist.items():
             for location in locations:
