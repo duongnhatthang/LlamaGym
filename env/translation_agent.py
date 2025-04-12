@@ -477,20 +477,21 @@ class TaxiAgent(TranslationAgent):
 class PendulumAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         try:
+            print(f"PendulumAgent.extract_action: Received response: {response}")  # Debug: Print the full response
             # Extract the torque value between << and >>
-            start = response.find("[") + 2
+            start = response.find("[") + 1
             end = response.find("]", start)
-            if start == 1 or end == -1:  # Check if << or >> is not found
+            if start == 0 or end == -1:  # Check if [ or ] is not found
                 raise ValueError("Delimiters not found")
             torque = float(response[start:end].strip())
-        except (ValueError, IndexError):
-            print(ValueError, IndexError)
-            print(f"PendulumAgent.extract_action({response}): cannot extract action. Return 0.0 torque.")
+            print(f"PendulumAgent.extract_action: Extracted torque: {torque}")  # Debug: Print the extracted torque
+        except (ValueError, IndexError) as e:
+            print(f"PendulumAgent.extract_action: Error extracting torque: {e}. Defaulting to 0.0 torque.")
             torque = 0.0
 
         # Ensure the torque is within the valid range [-2.0, 2.0]
         if torque < -2.0 or torque > 2.0:
-            print(f"The extracted torque {torque} is out of bounds. Clamping to the range [-2.0, 2.0].")
+            print(f"PendulumAgent.extract_action: The extracted torque {torque} is out of bounds. Clamping to the range [-2.0, 2.0].")
             torque = max(-2.0, min(2.0, torque))
 
         return np.array([torque])
