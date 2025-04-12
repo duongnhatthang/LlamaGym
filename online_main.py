@@ -64,7 +64,7 @@ def online_training(
             dataset_new = get_new_dataset(dataset, n_pretrain_eps)
 
             # Append episodes with transition validation
-            for episode in dataset.episodes:
+            for episode in dataset_new.episodes:
                 if len(episode) > 0 and hasattr(episode, 'rewards'):
                     buffer.append_episode(episode)
                     # n_pretrain_steps += len(episode)
@@ -100,7 +100,7 @@ def online_training(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "MountainCar-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server

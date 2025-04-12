@@ -330,34 +330,68 @@ class FrozenLakeAgent(TranslationAgent):
     def get_system_prompt(self) -> str:
         original_sys_prompt = super().get_system_prompt()
         if self.env_hist is None:
-            return original_sys_prompt + " Return the action without the target's coordination."
-        return original_sys_prompt + f" {self.env_hist_prompt}" + " Return the action without the target's coordination."
+            return original_sys_prompt + " Return the action at the end of your answer without the target's location."
+        return original_sys_prompt + f" {self.env_hist_prompt}" + " Return the action at the end of your answer without the target's location."
 
+    # def add_env_hist(self, observation, reward, action):
+        # nrows = 4
+        # current_row = observation // nrows
+        # current_col = observation % nrows
+        # if self.env_hist is None:
+        #     self.env_hist = {}
+        # if reward not in self.env_hist.keys():
+        #     self.env_hist[reward] = [(current_row, current_col)]
+        # else:
+        #     self.env_hist[reward] += [(current_row, current_col)]
+        # self.env_hist_prompt = "Environment history: "
+        # tmp = "Holes: "
+        # for reward, locations in self.env_hist.items():
+        #     if (location[0], location[1]) in [(1,1), (1, 3), (2,3), (3, 0)]:
+        #         tmp += f"({location[0]}, {location[1]}), "
+        # if len(tmp) > 7:
+        #     self.env_hist_prompt += tmp[:-2] + ". "
+        # for reward, locations in self.env_hist.items():
+        #     if location[0] == 3 and location[1] == 3:
+        #         self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
+        # for reward, locations in self.env_hist.items():
+        #     self.env_hist_prompt+="Reward " + str(reward) + " at locations: "
+        #     for location in locations:
+        #         self.env_hist_prompt+= f"({location[0]}, {location[1]}), "
+        #     self.env_hist_prompt = self.env_hist_prompt[:-2] + ". "
     def add_env_hist(self, observation, reward, action):
         nrows = 4
-        current_row = observation // nrows
-        current_col = observation % nrows
         if self.env_hist is None:
             self.env_hist = {}
         if reward not in self.env_hist.keys():
-            self.env_hist[reward] = [(current_row, current_col)]
-        else:
-            self.env_hist[reward] += [(current_row, current_col)]
+            self.env_hist[reward] = [observation]
+        elif observation not in self.env_hist[reward]:
+            self.env_hist[reward] += [observation]
         self.env_hist_prompt = "Environment history: "
         tmp = "Holes: "
         for reward, locations in self.env_hist.items():
-            if (location[0], location[1]) in [(1,1), (1, 3), (2,3), (3, 0)]:
-                tmp += f"({location[0]}, {location[1]}), "
+            for location in locations:
+                current_row = location // nrows
+                current_col = location % nrows
+                if current_row == 3 and current_col == 3:
+                    self.env_hist_prompt += f"Goal: ({current_row}, {current_col}). "
+                if (current_row, current_col) in [(1,1), (1, 3), (2,3), (3, 0)]:
+                    tmp += f"({current_row}, {current_col}), "
         if len(tmp) > 7:
             self.env_hist_prompt += tmp[:-2] + ". "
         for reward, locations in self.env_hist.items():
-            if location[0] == 3 and location[1] == 3:
-                self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
-        for reward, locations in self.env_hist.items():
             self.env_hist_prompt+="Reward " + str(reward) + " at locations: "
             for location in locations:
-                self.env_hist_prompt+= f"({location[0]}, {location[1]}), "
+                current_row = location // nrows
+                current_col = location % nrows
+                self.env_hist_prompt+= f"({current_row}, {current_col}), "
             self.env_hist_prompt = self.env_hist_prompt[:-2] + ". "
+        if hasattr(self, "prev_obs") and hasattr(self, "prev_reward") and hasattr(self, "prev_action"):
+            current_row = self.prev_obs // nrows
+            current_col = self.prev_obs % nrows
+            self.env_hist_prompt += f"Previous location: ({current_row}, {current_col}), previous action: {self.prev_action+1}, previous reward: {self.prev_reward}. "
+        self.prev_obs = observation
+        self.prev_reward = reward
+        self.prev_action = action
 
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
@@ -389,7 +423,7 @@ class CliffWalkingAgent(FrozenLakeAgent):
             self.env_hist = {}
         if reward not in self.env_hist.keys():
             self.env_hist[reward] = [observation]
-        else:
+        elif observation not in self.env_hist[reward]:
             self.env_hist[reward] += [observation]
         self.env_hist_prompt = "Environment history: "
         for reward, locations in self.env_hist.items():
