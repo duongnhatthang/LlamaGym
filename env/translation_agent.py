@@ -3,6 +3,7 @@ from env import atari
 import gymnasium as gym
 import argparse
 from collections import Counter
+import numpy as np
 
 class TranslationAgent(Agent):
     def __init__(self, model, tokenizer, device, generate_config_dict=None, ppo_config_dict=None, obs_translator=None, game_describer=None, 
@@ -477,12 +478,13 @@ class PendulumAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         try:
             # Extract the torque value between << and >>
-            start = response.find("<<") + 2
-            end = response.find(">>", start)
+            start = response.find("[") + 2
+            end = response.find("]", start)
             if start == 1 or end == -1:  # Check if << or >> is not found
                 raise ValueError("Delimiters not found")
             torque = float(response[start:end].strip())
         except (ValueError, IndexError):
+            print(ValueError, IndexError)
             print(f"PendulumAgent.extract_action({response}): cannot extract action. Return 0.0 torque.")
             torque = 0.0
 
@@ -491,4 +493,4 @@ class PendulumAgent(TranslationAgent):
             print(f"The extracted torque {torque} is out of bounds. Clamping to the range [-2.0, 2.0].")
             torque = max(-2.0, min(2.0, torque))
 
-        return torque
+        return np.array([torque])
