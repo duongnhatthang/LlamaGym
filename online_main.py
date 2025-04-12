@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from env.atari.represented_atari_game import GymCompatWrapper2
 from d3rlpy.metrics import EnvironmentEvaluator
 import gymnasium.spaces
+from pretrain_from_llm import get_new_dataset
 
 class OneHotWrapper(gym.ObservationWrapper):
     def __init__(self, env):
@@ -60,6 +61,7 @@ def online_training(
             # Load dataset with proper validation
             with open(hyperparams['data_path'], 'rb') as f:
                 dataset = pickle.load(f)
+            dataset_new = get_new_dataset(dataset, n_pretrain_eps)
 
             # Append episodes with transition validation
             for episode in dataset.episodes:
@@ -151,21 +153,21 @@ if __name__ == "__main__":
     with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
         pretrain_7b_3000_dqn = pickle.load(file)
 
-    tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
-    hyperparams['data_path'] =  None
-    hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
+    # tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
+    # hyperparams['data_path'] =  None
+    # hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
 
-    hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
-    for i in range(hyperparams['n_exp']):
-        cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+    # hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
     hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411000858.pkl" #FrozenLake
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl" #CartPole with Eps
