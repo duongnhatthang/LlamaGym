@@ -396,8 +396,9 @@ class CliffWalkingAgent(FrozenLakeAgent):
             self.env_hist[reward] += [(current_row, current_col)]
         self.env_hist_prompt = "Environment history: "
         for reward, locations in self.env_hist.items():
-            if location[0] == 3 and location[1] == 11:
-                self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
+            for location in locations:
+                if location[0] == 3 and location[1] == 11:
+                    self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
         for reward, locations in self.env_hist.items():
             if reward == -100:
                 self.env_hist_prompt += f"Cliff: "
