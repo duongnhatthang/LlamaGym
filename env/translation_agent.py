@@ -333,31 +333,6 @@ class FrozenLakeAgent(TranslationAgent):
             return original_sys_prompt + " Return the action at the end of your answer without the target's location."
         return original_sys_prompt + f" {self.env_hist_prompt}" + " Return the action at the end of your answer without the target's location."
 
-    # def add_env_hist(self, observation, reward, action):
-        # nrows = 4
-        # current_row = observation // nrows
-        # current_col = observation % nrows
-        # if self.env_hist is None:
-        #     self.env_hist = {}
-        # if reward not in self.env_hist.keys():
-        #     self.env_hist[reward] = [(current_row, current_col)]
-        # else:
-        #     self.env_hist[reward] += [(current_row, current_col)]
-        # self.env_hist_prompt = "Environment history: "
-        # tmp = "Holes: "
-        # for reward, locations in self.env_hist.items():
-        #     if (location[0], location[1]) in [(1,1), (1, 3), (2,3), (3, 0)]:
-        #         tmp += f"({location[0]}, {location[1]}), "
-        # if len(tmp) > 7:
-        #     self.env_hist_prompt += tmp[:-2] + ". "
-        # for reward, locations in self.env_hist.items():
-        #     if location[0] == 3 and location[1] == 3:
-        #         self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
-        # for reward, locations in self.env_hist.items():
-        #     self.env_hist_prompt+="Reward " + str(reward) + " at locations: "
-        #     for location in locations:
-        #         self.env_hist_prompt+= f"({location[0]}, {location[1]}), "
-        #     self.env_hist_prompt = self.env_hist_prompt[:-2] + ". "
     def add_env_hist(self, observation, reward, action):
         nrows = 4
         if self.env_hist is None:
@@ -497,3 +472,21 @@ class TaxiAgent(TranslationAgent):
             print(f"The extracted action is {out}, which is out of bounds. Return 1: Down. Response: {response}.")
             out = 1
         return out-1  # Choose index start from 1 since LLM bias toward action 0. Shift to 0-based index for gym compatibility.
+
+class PendulumAgent(TranslationAgent):
+    def extract_action(self, response: str) -> gym.core.ActType:
+        try:
+            # Extract the torque value between << and >>
+            start = response.index("<<") + 2
+            end = response.index(">>")
+            torque = float(response[start:end].strip())
+        except (ValueError, IndexError):
+            print(f"PendulumAgent.extract_action({response}): cannot extract action. Return 0.0 torque.")
+            torque = 0.0
+
+        # Ensure the torque is within the valid range [-2.0, 2.0]
+        if torque < -2.0 or torque > 2.0:
+            print(f"The extracted torque {torque} is out of bounds. Clamping to the range [-2.0, 2.0].")
+            torque = max(-2.0, min(2.0, torque))
+
+        return torque
