@@ -484,7 +484,7 @@ class PendulumAgent(TranslationAgent):
             if start == 0 or end == -1:  # Check if [ or ] is not found
                 raise ValueError("Delimiters not found")
             torque = float(response[start:end].strip())
-            print(f"PendulumAgent.extract_action: Extracted torque: {torque}")  # Debug: Print the extracted torque
+            # print(f"PendulumAgent.extract_action: Extracted torque: {torque}")  # Debug: Print the extracted torque
         except (ValueError, IndexError) as e:
             print(f"PendulumAgent.extract_action: Error extracting torque: {e}. Defaulting to 0.0 torque.")
             torque = 0.0
