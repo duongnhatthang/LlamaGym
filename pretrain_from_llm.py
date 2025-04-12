@@ -2,9 +2,6 @@ import gymnasium as gym
 import numpy as np
 import d3rlpy
 import pickle
-import pandas as pd
-
-from env.atari.represented_atari_game import GymCompatWrapper2
 
 hyperparams = {
         "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
@@ -26,36 +23,6 @@ hyperparams = {
         "n_steps_per_epoch": 200,
         "n_pretrain_steps": 1000
     }
-
-n_pretrain_eps = hyperparams["n_pretrain_eps"] #10
-n_online_eps = hyperparams["n_online_eps"]
-n_exp = hyperparams["n_exp"]
-hyperparams["target_update_interval"] = 200 # For pretraining, leave the original value of 1000 for online training
-
-# # d3rlpy supports both Gym and Gymnasium
-# if "Represented" in hyperparams["env"]:
-#     env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-#     eval_env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-# else:
-#     env = gym.make(hyperparams["env"])
-#     eval_env = gym.make(hyperparams["env"])
-
-# fix seed
-d3rlpy.seed(hyperparams["seed"])
-# d3rlpy.envs.seed_env(env, hyperparams["seed"])
-# d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
-
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412120230.pkl", 'rb') as file: #FrozenLake
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412032827.pkl", 'rb') as file: #CartPole
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLakeBug
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
-    Qwen_32B_dataset = pickle.load(file)
-
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412075104.pkl", 'rb') as file: #FrozenLake
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250410211529.pkl", 'rb') as file: #CartPole
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLakeBug
-# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file: #CartPole with Eps
-    Qwen_7B_dataset = pickle.load(file)
 
 def ensure_numpy_array(x, hyperparams=hyperparams):
     if isinstance(gym.make(hyperparams["env"]).observation_space, gym.spaces.Discrete):
@@ -82,27 +49,58 @@ def get_new_dataset(dataset, n_eps):
     print(f"Number of episodes: {len(dataset_new.episodes)}")
     return dataset_new
 
-Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
-Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
+if __name__ == "__main__":
+    n_pretrain_eps = hyperparams["n_pretrain_eps"] #10
+    n_online_eps = hyperparams["n_online_eps"]
+    n_exp = hyperparams["n_exp"]
+    hyperparams["target_update_interval"] = 200 # For pretraining, leave the original value of 1000 for online training
 
-pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
-    batch_size=hyperparams['batch_size'],
-    learning_rate=hyperparams['learning_rate'],
-    gamma=hyperparams['gamma'],
-    target_update_interval=hyperparams['target_update_interval']
-    ).create(device=hyperparams['gpu'])
-pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
-    batch_size=hyperparams['batch_size'], 
-    learning_rate=hyperparams['learning_rate'],
-    gamma=hyperparams['gamma'],
-    target_update_interval=hyperparams['target_update_interval']
-    ).create(device=hyperparams['gpu'])
+    # # d3rlpy supports both Gym and Gymnasium
+    # if "Represented" in hyperparams["env"]:
+    #     env = GymCompatWrapper2(gym.make(hyperparams["env"]))
+    #     eval_env = GymCompatWrapper2(gym.make(hyperparams["env"]))
+    # else:
+    #     env = gym.make(hyperparams["env"])
+    #     eval_env = gym.make(hyperparams["env"])
 
-# start offline training
-pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
-    pickle.dump(pretrain_7b_dqn, file)
+    # fix seed
+    d3rlpy.seed(hyperparams["seed"])
+    # d3rlpy.envs.seed_env(env, hyperparams["seed"])
+    # d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
-    pickle.dump(pretrain_32b_dqn, file)
+    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412120230.pkl", 'rb') as file: #FrozenLake
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412032827.pkl", 'rb') as file: #CartPole
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLakeBug
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
+        Qwen_32B_dataset = pickle.load(file)
+
+    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412075104.pkl", 'rb') as file: #FrozenLake
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250410211529.pkl", 'rb') as file: #CartPole
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLakeBug
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file: #CartPole with Eps
+        Qwen_7B_dataset = pickle.load(file)
+
+    Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
+    Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
+
+    pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
+        batch_size=hyperparams['batch_size'],
+        learning_rate=hyperparams['learning_rate'],
+        gamma=hyperparams['gamma'],
+        target_update_interval=hyperparams['target_update_interval']
+        ).create(device=hyperparams['gpu'])
+    pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
+        batch_size=hyperparams['batch_size'], 
+        learning_rate=hyperparams['learning_rate'],
+        gamma=hyperparams['gamma'],
+        target_update_interval=hyperparams['target_update_interval']
+        ).create(device=hyperparams['gpu'])
+
+    # start offline training
+    pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
+        pickle.dump(pretrain_7b_dqn, file)
+
+    pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
+        pickle.dump(pretrain_32b_dqn, file)
