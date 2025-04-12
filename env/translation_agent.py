@@ -246,28 +246,28 @@ class PongAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
         out = -1
-        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4", "5", "0"):
+        if len(digits) == 0 or digits[-1] not in ("1", "2", "3", "4", "5", "6"):
             if "Move left while hiting the ball" in response.lower():
-                out = 5
+                out = 6
             elif "Move right while hiting the ball" in response.lower():
-                out = 4
+                out = 5
             elif "Move LEFT" in response.lower():
-                out = 3
+                out = 4
             elif "Move RIGHT" in response.lower():
-                out = 2
+                out = 3
             elif "Hit your ball" in response.lower():
-                out = 1
+                out = 2
             elif "NOOP" in response.lower():
-                out = 0
-        elif digits[-1] in ("1", "2", "3", "4", "5", "0"):
+                out = 1
+        elif digits[-1] in ("1", "2", "3", "4", "5", "6"):
             out = int(digits[-1])
         else:
-            print(f"PongAgent.extract_action({response}): cannot extract action. Return 0: Do nothing (NOOP)")
-            out = 0
-        if out not in range(6):
-            print(f"The extracted action is {out}, which is out of bounds. Return 0: Do nothing (NOOP). Response: {response}.")
-            out = 0
-        return out
+            print(f"PongAgent.extract_action({response}): cannot extract action. Return 1: Do nothing (NOOP)")
+            out = 1
+        if out not in range(1,7,1):
+            print(f"The extracted action is {out}, which is out of bounds. Return 1: Do nothing (NOOP). Response: {response}.")
+            out = 1
+        return out-1
 
 class CartPoleAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
@@ -330,25 +330,34 @@ class FrozenLakeAgent(TranslationAgent):
     def get_system_prompt(self) -> str:
         original_sys_prompt = super().get_system_prompt()
         if self.env_hist is None:
-            return original_sys_prompt
-        return original_sys_prompt + f" {self.env_hist_prompt}"
+            return original_sys_prompt + " Return the action without the target's coordination."
+        return original_sys_prompt + f" {self.env_hist_prompt}" + " Return the action without the target's coordination."
 
     def add_env_hist(self, observation, reward):
+        nrows = 4
+        current_row = observation // nrows
+        current_col = observation % nrows
         if self.env_hist is None:
             self.env_hist = {}
-        if self.env_hist_prompt is None:
-            self.env_hist_prompt = "Environment history: "
-        if observation not in self.env_hist.keys():
-            self.env_hist[observation] = reward
-            nrows = 4
-            current_row = observation // nrows
-            current_col = observation % nrows
-            if (current_row, current_col) in [(1,1), (1, 3), (2,3), (3, 0)]:
-                self.env_hist_prompt += f"Step into a hole located at {(current_row, current_col)} and receive {reward} reward. "
-            elif current_row == 3 and current_col == 3:
-                self.env_hist_prompt += f"Reaches the goal location ({current_row}, {current_col}) and receive {reward} reward. "
-            else:
-                self.env_hist_prompt += f"Step into location ({current_row}, {current_col}) and receive {reward} reward. "
+        if reward not in self.env_hist.keys():
+            self.env_hist[reward] = [(current_row, current_col)]
+        else:
+            self.env_hist[reward] += [(current_row, current_col)]
+        self.env_hist_prompt = "Environment history: "
+        tmp = "Holes: "
+        for reward, locations in self.env_hist.items():
+            if (location[0], location[1]) in [(1,1), (1, 3), (2,3), (3, 0)]:
+                tmp += f"({location[0]}, {location[1]}), "
+        if len(tmp) > 7:
+            self.env_hist_prompt += tmp[:-2] + ". "
+        for reward, locations in self.env_hist.items():
+            if location[0] == 3 and location[1] == 3:
+                self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
+        for reward, locations in self.env_hist.items():
+            self.env_hist_prompt+="Reward " + str(reward) + " at locations: "
+            for location in locations:
+                self.env_hist_prompt+= f"({location[0]}, {location[1]}), "
+            self.env_hist_prompt = self.env_hist_prompt[:-2] + ". "
 
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]
@@ -374,22 +383,28 @@ class FrozenLakeAgent(TranslationAgent):
 
     
 class CliffWalkingAgent(FrozenLakeAgent):
+
     def add_env_hist(self, observation, reward):
+        nrows = 12
+        current_row = observation // nrows
+        current_col = observation % nrows
         if self.env_hist is None:
             self.env_hist = {}
-        if self.env_hist_prompt is None:
-            self.env_hist_prompt = "Environment history: "
-        if observation not in self.env_hist.keys():
-            self.env_hist[observation] = reward
-            nrows = 12
-            current_row = observation // nrows
-            current_col = observation % nrows
-            if reward==-100:
-                self.env_hist_prompt += f"Step into the cliff at {(current_row, current_col)} and receive {reward} reward. "
-            elif current_row == 3 and current_col == 11:
-                self.env_hist_prompt += f"Reaches the goal location ({current_row}, {current_col}) and receive {reward} reward. "
-            else:
-                self.env_hist_prompt += f"Step into location ({current_row}, {current_col}) and receive {reward} reward. "
+        if reward not in self.env_hist.keys():
+            self.env_hist[reward] = [(current_row, current_col)]
+        else:
+            self.env_hist[reward] += [(current_row, current_col)]
+        self.env_hist_prompt = "Environment history: "
+        for reward, locations in self.env_hist.items():
+            if location[0] == 3 and location[1] == 11:
+                self.env_hist_prompt += f"Goal: ({location[0]}, {location[1]}). "
+        for reward, locations in self.env_hist.items():
+            if reward == -100:
+                self.env_hist_prompt += f"Cliff: "
+            self.env_hist_prompt+="Reward " + str(reward) + " at locations: "
+            for location in locations:
+                self.env_hist_prompt+= f"({location[0]}, {location[1]}), "
+            self.env_hist_prompt = self.env_hist_prompt[:-2] + ". "
 
     def extract_action(self, response: str) -> gym.core.ActType:
         digits = [char for char in response if char.isdigit()]

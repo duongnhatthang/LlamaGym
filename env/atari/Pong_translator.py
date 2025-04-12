@@ -17,6 +17,7 @@ class GameDescriber:
     def __init__(self, args):
         self.is_only_local_obs = args.is_only_local_obs == 1
         self.max_episode_len = args.max_episode_len
+        self.frameskip = args.frameskip
         self.action_desc_dict = {
         }
         self.reward_desc_dict = {
@@ -34,11 +35,11 @@ class GameDescriber:
     def describe_game(self):
         return "In the Pong game, you play the ball with your opponent, each player rallys the ball by moving the paddles on the playfield. " \
                "Paddles move only vertically on the playfield. A player scores one point when the opponent hits the ball out of bounds or misses a hit. " \
-               "The first player to score 21 points wins the game."
+               "The first player to score 21 points wins the game. The number of frameskip is set to 4. "
 
     def describe_action(self):
-        return "Type 0 for NOOP (no operation), 2 to move up, 3 to move down. " \
-               "Ensure you only provide the action number from the valid action list, i.e., [0, 2, 3]. "
+        return "Type 1 for NOOP (no operation), 3 to move up, 4 to move down. " \
+               "Ensure you only provide the action number from the valid action list, i.e., [1, 3, 4]. "
         # return "Type 0 for NOOP (no operation), 1 to hit the ball, " \
         #        "2 to move right, 3 to move left, 4 to move right while hit the ball, 5 to move left while hit the ball. Ensure you only provide the action number " \
         #        "from the valid action list, i.e., [0, 1, 2, 3, 4, 5]."
