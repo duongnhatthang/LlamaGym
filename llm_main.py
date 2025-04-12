@@ -183,6 +183,24 @@ def get_agent(model, tokenizer, device, hyperparams):
             obs_translator=toy_text.taxi_translator.ObsTranslator(),
             game_describer=toy_text.taxi_translator.GameDescriber(args)
         )
+    elif hyperparams['env'] == "Pendulum-v1":
+        print("Creating PendulumAgent")
+        agent = translation_agent.PendulumAgent(
+            model=model,
+            tokenizer=tokenizer,
+            device=device,
+            generate_config_dict={
+                key: value
+                for key, value in hyperparams.items()
+                if key.startswith("generate/")
+            },
+            ppo_config_dict={
+                "batch_size": hyperparams["batch_size"],
+                "mini_batch_size": hyperparams["batch_size"],
+            },
+            obs_translator=classic_control.pendulum_translator.ObsTranslator(),
+            game_describer=classic_control.pendulum_translator.GameDescriber(args)
+        )
     else:
         assert False, f"Environment {hyperparams['env']} is not supported. Please provide a valid environment."
     return agent
@@ -192,7 +210,7 @@ if __name__ == "__main__":
     hyperparams = {
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
         # "model_name": "Qwen/Qwen2.5-32B-Instruct",
-        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "Pendulum-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -208,7 +226,7 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 100, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110)
+        "max_episode_len": 50, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110), 50 for Pendulum
         "eps": 0.0#0.01,  # epsilon for exploration
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
@@ -255,7 +273,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                # print(agent.current_episode_messages)
+                print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
