@@ -477,8 +477,10 @@ class PendulumAgent(TranslationAgent):
     def extract_action(self, response: str) -> gym.core.ActType:
         try:
             # Extract the torque value between << and >>
-            start = response.index("<<") + 2
-            end = response.index(">>")
+            start = response.find("<<") + 2
+            end = response.find(">>", start)
+            if start == 1 or end == -1:  # Check if << or >> is not found
+                raise ValueError("Delimiters not found")
             torque = float(response[start:end].strip())
         except (ValueError, IndexError):
             print(f"PendulumAgent.extract_action({response}): cannot extract action. Return 0.0 torque.")
