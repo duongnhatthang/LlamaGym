@@ -259,7 +259,7 @@ if __name__ == "__main__":
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
-                agent.add_env_hist(observation, reward)
+                agent.add_env_hist(observation, reward, action)
             agent.assign_reward(reward)
             observations.append(observation)
             actions.append(action)
