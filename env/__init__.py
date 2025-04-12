@@ -8,6 +8,7 @@ from .toy_text import frozenlake_translator
 from .classic_control import cartpole_translator
 from .classic_control import acrobot_translator
 from .classic_control import mountaincar_translator
+from .classic_control import pendulum_translator
 
 register_environments()
 
