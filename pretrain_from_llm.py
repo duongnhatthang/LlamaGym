@@ -14,7 +14,7 @@ hyperparams = {
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 10,
-        "n_online_eps": 1400,
+        "n_online_eps": 140,
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -45,11 +45,13 @@ d3rlpy.seed(hyperparams["seed"])
 # d3rlpy.envs.seed_env(env, hyperparams["seed"])
 # d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLake
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412032827.pkl", 'rb') as file: #CartPole
+# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLake
 # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
     Qwen_32B_dataset = pickle.load(file)
 
-with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLake
+with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250410211529.pkl", 'rb') as file: #CartPole
+# with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLake
 # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file: #CartPole with Eps
     Qwen_7B_dataset = pickle.load(file)
 
