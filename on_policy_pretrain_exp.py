@@ -67,7 +67,7 @@ if __name__ == "__main__":
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 0,
+        "n_pretrain_eps": 30,
         "n_online_eps": 120, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
