@@ -44,8 +44,8 @@ def online_training_split(
         env_evaluator = EnvironmentEvaluator(eval_env)
         rewards.append(env_evaluator(dqn, dataset=None))
 
-    dataset = d3rlpy.dataset.MDPDataset(episodes=buffer.episodes)
-    dqn.fit(dataset, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+    # dataset = d3rlpy.dataset.MDPDataset(episodes=buffer.episodes)
+    dqn.fit(buffer, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
 
     for _ in trange(hyperparams['n_online_eps']):
         dqn.fit_online(
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
-        "n_pretrain_eps": 30,
+        "n_pretrain_eps": 0,
         "n_online_eps": 120, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
