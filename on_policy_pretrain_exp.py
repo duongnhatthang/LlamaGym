@@ -44,7 +44,6 @@ def online_training_split(
         env_evaluator = EnvironmentEvaluator(eval_env)
         rewards.append(env_evaluator(dqn, dataset=None))
 
-    # dataset = d3rlpy.dataset.MDPDataset(episodes=buffer.episodes)
     dqn.fit(buffer, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
 
     for _ in trange(hyperparams['n_online_eps']):
