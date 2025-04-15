@@ -32,21 +32,29 @@ def online_training(
     explorer=None,
     model=None
 ):
+    # Determine the algorithm based on the action space
+    if isinstance(env.action_space, gym.spaces.Box):  # Continuous action space
+        algo_config = d3rlpy.algos.SACConfig(
+            batch_size=hyperparams['batch_size'],
+            # learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            # target_update_interval=hyperparams['target_update_interval']
+        )
+    else:  # Discrete action space
+        algo_config = d3rlpy.algos.DoubleDQNConfig(
+            batch_size=hyperparams['batch_size'],
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval']
+        )
+
     # Load model with proper validation
     if hyperparams['model_path']:
-        # with open(hyperparams['model_path'], 'rb') as file:
-        #     dqn = pickle.load(file)
         dqn = d3rlpy.load_learnable(hyperparams['model_path'])
     elif model:
         dqn = model
     else:
-        # dqn = d3rlpy.algos.DQNConfig(
-        dqn = d3rlpy.algos.DoubleDQNConfig(
-            batch_size=hyperparams['batch_size'], #Test smaller batch size: 32, 64. May be noisier
-            learning_rate=hyperparams['learning_rate'],
-            gamma=hyperparams['gamma'],
-            target_update_interval=hyperparams['target_update_interval'] #Test with 1k, 2k, 5k
-            ).create(device=hyperparams['gpu'])
+        dqn = algo_config.create(device=hyperparams['gpu'])
 
     # Initialize empty FIFO buffer
     buffer = d3rlpy.dataset.ReplayBuffer(
@@ -67,7 +75,6 @@ def online_training(
             for episode in dataset_new.episodes:
                 if len(episode) > 0 and hasattr(episode, 'rewards'):
                     buffer.append_episode(episode)
-                    # n_pretrain_steps += len(episode)
                     n_pretrain_eps -= 1
                 else:
                     print(f"Skipping invalid episode: {episode}")
@@ -82,16 +89,13 @@ def online_training(
 
     rewards = []
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    for _ in trange(n_pretrain_eps+hyperparams['n_online_eps']):
+    for _ in trange(n_pretrain_eps + hyperparams['n_online_eps']):
         # Ensure we have enough transitions in buffer before training
         dqn.fit_online(
             env=env,
             buffer=buffer,
             explorer=explorer,
-            # eval_env=eval_env,
             n_steps=hyperparams['max_episode_len'],
-            # n_steps_per_epoch=hyperparams['n_steps_per_epoch'],
-            # update_interval=update_interval,
             experiment_name=f"{timestamp}_online_training",
         )
         env_evaluator = EnvironmentEvaluator(eval_env)
@@ -100,14 +104,14 @@ def online_training(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "Pendulum-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", Pendulum-v1, "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 30,
-        "n_online_eps": 120, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
+        "n_online_eps": 120, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake, 30-570 for Pendulum
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
