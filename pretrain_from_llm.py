@@ -85,18 +85,29 @@ if __name__ == "__main__":
     Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
     Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
 
-    pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
-        batch_size=hyperparams['batch_size'],
-        learning_rate=hyperparams['learning_rate'],
-        gamma=hyperparams['gamma'],
-        target_update_interval=hyperparams['target_update_interval']
-        ).create(device=hyperparams['gpu'])
-    pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
-        batch_size=hyperparams['batch_size'], 
-        learning_rate=hyperparams['learning_rate'],
-        gamma=hyperparams['gamma'],
-        target_update_interval=hyperparams['target_update_interval']
-        ).create(device=hyperparams['gpu'])
+    # Determine the algorithm based on the action space
+    if isinstance(gym.make(hyperparams["env"]).action_space, gym.spaces.Box):  # Continuous action space
+        pretrain_7b_dqn = d3rlpy.algos.SACConfig(
+            batch_size=hyperparams['batch_size'],
+            gamma=hyperparams['gamma'],
+            ).create(device=hyperparams['gpu'])
+        pretrain_32b_dqn = d3rlpy.algos.SACConfig(
+            batch_size=hyperparams['batch_size'],
+            gamma=hyperparams['gamma'],
+            ).create(device=hyperparams['gpu'])
+    else:  # Discrete action space
+        pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
+            batch_size=hyperparams['batch_size'],
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval']
+            ).create(device=hyperparams['gpu'])
+        pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
+            batch_size=hyperparams['batch_size'], 
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval']
+            ).create(device=hyperparams['gpu'])
 
     # start offline training
     pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
