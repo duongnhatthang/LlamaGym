@@ -4,7 +4,7 @@ import d3rlpy
 import pickle
 
 hyperparams = {
-        "env": "Pendulum-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 10,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
@@ -68,14 +68,18 @@ if __name__ == "__main__":
     # d3rlpy.envs.seed_env(env, hyperparams["seed"])
     # d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250414014508.pkl", 'rb') as file: #Pendulum
+    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250415065446.pkl", 'rb') as file: #CliffWalking
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250413081613.pkl", 'rb') as file: #MountainCar
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250414014508.pkl", 'rb') as file: #Pendulum
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412120230.pkl", 'rb') as file: #FrozenLake
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412032827.pkl", 'rb') as file: #CartPole
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLakeBug
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
         Qwen_32B_dataset = pickle.load(file)
 
-    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250413234248.pkl", 'rb') as file: #Pendulum
+    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412171921.pkl", 'rb') as file: #CliffWalking
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250415095844.pkl", 'rb') as file: #MountainCar
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250413234248.pkl", 'rb') as file: #Pendulum
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412075104.pkl", 'rb') as file: #FrozenLake
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250410211529.pkl", 'rb') as file: #CartPole
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLakeBug
