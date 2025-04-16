@@ -25,6 +25,74 @@ class OneHotWrapper(gym.ObservationWrapper):
         one_hot[obs] = 1.0
         return one_hot
 
+def evaluate_qlearning_with_environment(
+    algo,
+    env,
+    max_episode_len,
+    n_trials: int = 10,
+    epsilon: float = 0.0,
+) -> float:
+    """
+    From d3rlpy.metrics.EnvironmentEvaluator
+    Modified because the original code bugged out on CliffWalking-v0. The episode never end.
+    
+    Returns average environment score.
+
+    .. code-block:: python
+
+        import gym
+
+        from d3rlpy.algos import DQN
+        from d3rlpy.metrics.utility import evaluate_with_environment
+
+        env = gym.make('CartPole-v0')
+
+        cql = CQL()
+
+        mean_episode_return = evaluate_with_environment(cql, env)
+
+
+    Args:
+        alg: algorithm object.
+        env: gym-styled environment.
+        n_trials: the number of trials.
+        epsilon: noise factor for epsilon-greedy policy.
+
+    Returns:
+        average score.
+    """
+    episode_rewards = []
+    for _ in range(n_trials):
+        observation, _ = env.reset()
+        episode_reward = 0.0
+        count=0
+        while True:
+            # take action
+            if np.random.random() < epsilon:
+                action = env.action_space.sample()
+            else:
+                if isinstance(observation, np.ndarray):
+                    observation = np.expand_dims(observation, axis=0)
+                elif isinstance(observation, (tuple, list)):
+                    observation = [
+                        np.expand_dims(o, axis=0) for o in observation
+                    ]
+                else:
+                    raise ValueError(
+                        f"Unsupported observation type: {type(observation)}"
+                    )
+                action = algo.predict(observation)[0]
+            observation, reward, done, truncated, _ = env.step(action)
+            episode_reward += float(reward)
+            count+=1
+            if count >= max_episode_len:
+                done = True
+
+            if done or truncated:
+                break
+        episode_rewards.append(episode_reward)
+    return float(np.mean(episode_rewards))
+
 def online_training(
     env,
     eval_env,
@@ -98,8 +166,12 @@ def online_training(
             n_steps=hyperparams['max_episode_len'],
             experiment_name=f"{timestamp}_online_training",
         )
-        env_evaluator = EnvironmentEvaluator(eval_env)
-        rewards.append(env_evaluator(dqn, dataset=None))
+        if hyperparams['env'] == "CliffWalking-v0":
+            r=evaluate_qlearning_with_environment(dqn, eval_env, hyperparams["max_episode_len"])
+        else:
+            env_evaluator = EnvironmentEvaluator(env, n_trials=1)
+            r = env_evaluator(dqn, dataset=None)
+        rewards.append(r)
     return rewards
 
 if __name__ == "__main__":
