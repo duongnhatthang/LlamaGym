@@ -10,7 +10,7 @@ from env.atari.represented_atari_game import GymCompatWrapper2
 from d3rlpy.metrics import EnvironmentEvaluator
 # import gymnasium.spaces
 # from pretrain_from_llm import get_new_dataset
-from online_main import OneHotWrapper
+from online_main import OneHotWrapper, evaluate_qlearning_with_environment
 
 def online_training_split(
     env,
@@ -54,8 +54,12 @@ def online_training_split(
             n_steps=hyperparams['max_episode_len'],
             experiment_name=f"{timestamp}_online_training",
         )
-        env_evaluator = EnvironmentEvaluator(eval_env)
-        rewards.append(env_evaluator(dqn, dataset=None))
+        if hyperparams['env'] == "CliffWalking-v0":
+            r=evaluate_qlearning_with_environment(dqn, eval_env, hyperparams["max_episode_len"])
+        else:
+            env_evaluator = EnvironmentEvaluator(env, n_trials=1)
+            r = env_evaluator(dqn, dataset=None)
+        rewards.append(r)
     return rewards
 
 if __name__ == "__main__":
@@ -67,7 +71,7 @@ if __name__ == "__main__":
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 30,
-        "n_online_eps": 120, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
+        "n_online_eps": 120, #10-5990 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -103,7 +107,7 @@ if __name__ == "__main__":
     def run_exp(n_pretrain_steps, n_pretrain_eps, cache, env, eval_env, hyperparams, explorer):
         hyperparams["n_pretrain_steps"]=n_pretrain_steps
         hyperparams["n_pretrain_eps"]=n_pretrain_eps
-        hyperparams["n_online_eps"]=150-hyperparams["n_pretrain_eps"]
+        hyperparams["n_online_eps"]=200-hyperparams["n_pretrain_eps"]
         for i in range(hyperparams['n_exp']):
             cache[f'pretrain_{hyperparams["n_pretrain_eps"]}_eps_{hyperparams["n_pretrain_steps"]}_steps_{i}'] = online_training_split(env, eval_env, hyperparams, explorer)
         return cache
