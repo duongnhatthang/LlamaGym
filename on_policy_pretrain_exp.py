@@ -41,8 +41,12 @@ def online_training_split(
             n_steps=hyperparams['max_episode_len'],
             experiment_name=f"{timestamp}_online_training",
         )
-        env_evaluator = EnvironmentEvaluator(eval_env)
-        rewards.append(env_evaluator(dqn, dataset=None))
+        if hyperparams['env'] == "CliffWalking-v0":
+            r=evaluate_qlearning_with_environment(dqn, eval_env, hyperparams["max_episode_len"])
+        else:
+            env_evaluator = EnvironmentEvaluator(env, n_trials=1)
+            r = env_evaluator(dqn, dataset=None)
+        rewards.append(r)
 
     dqn.fit(buffer, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
 
@@ -64,7 +68,7 @@ def online_training_split(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
