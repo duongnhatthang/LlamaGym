@@ -18,12 +18,21 @@ def online_training_split(
     hyperparams,
     explorer=None
 ):
-    dqn = d3rlpy.algos.DoubleDQNConfig(
-        batch_size=hyperparams['batch_size'], #Test smaller batch size: 32, 64. May be noisier
-        learning_rate=hyperparams['learning_rate'],
-        gamma=hyperparams['gamma'],
-        target_update_interval=hyperparams['target_update_interval'] #Test with 1k, 2k, 5k
-        ).create(device=hyperparams['gpu'])
+    if isinstance(env.action_space, gym.spaces.Box):  # Continuous action space
+        algo_config = d3rlpy.algos.SACConfig(
+            batch_size=hyperparams['batch_size'],
+            # learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            # target_update_interval=hyperparams['target_update_interval']
+        )
+    else:  # Discrete action space
+        algo_config = d3rlpy.algos.DoubleDQNConfig(
+            batch_size=hyperparams['batch_size'],
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval']
+        )
+    dqn = algo_config.create(device=hyperparams['gpu'])
 
     # Initialize empty FIFO buffer
     buffer = d3rlpy.dataset.ReplayBuffer(
@@ -68,7 +77,7 @@ def online_training_split(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "Pendulum-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
@@ -111,7 +120,7 @@ if __name__ == "__main__":
     def run_exp(n_pretrain_steps, n_pretrain_eps, cache, env, eval_env, hyperparams, explorer):
         hyperparams["n_pretrain_steps"]=n_pretrain_steps
         hyperparams["n_pretrain_eps"]=n_pretrain_eps
-        hyperparams["n_online_eps"]=200-hyperparams["n_pretrain_eps"]
+        hyperparams["n_online_eps"]=600-hyperparams["n_pretrain_eps"]
         for i in range(hyperparams['n_exp']):
             cache[f'pretrain_{hyperparams["n_pretrain_eps"]}_eps_{hyperparams["n_pretrain_steps"]}_steps_{i}'] = online_training_split(env, eval_env, hyperparams, explorer)
         return cache
