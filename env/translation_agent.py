@@ -7,7 +7,7 @@ import numpy as np
 
 class TranslationAgent(Agent):
     def __init__(self, model, tokenizer, device, generate_config_dict=None, ppo_config_dict=None, obs_translator=None, game_describer=None, 
-                 reasoning_mode="COT", num_votes=5, num_cot_samples=5):
+                 reasoning_mode="BASE", num_votes=5, num_cot_samples=5):
         # We'll store references needed for COT, MVOTE, and BEST
         self.reasoning_mode = reasoning_mode
         self.num_votes = num_votes # MVOTE

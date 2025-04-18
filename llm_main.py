@@ -208,9 +208,9 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        "model_name": "Qwen/QwQ-32B",
         # "model_name": "Qwen/Qwen2.5-32B-Instruct",
-        "env": "MountainCar-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         "batch_size": 4,
         "seed": 42069,
         "n_episodes": 30,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
-        "generate/max_new_tokens": 2000,
+        "generate/max_new_tokens": 8000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
@@ -273,7 +273,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                # print(agent.current_episode_messages)
+                print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
