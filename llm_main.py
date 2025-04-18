@@ -208,9 +208,9 @@ def get_agent(model, tokenizer, device, hyperparams):
 
 if __name__ == "__main__":
     hyperparams = {
-        "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+        # "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
         # "model_name": "Qwen/QwQ-32B",
-        # "model_name": "Qwen/Qwen2.5-32B-Instruct",
+        "model_name": "Qwen/Qwen2.5-7B-Instruct",
         "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -228,7 +228,8 @@ if __name__ == "__main__":
         "generate/top_k": 0,
         "generate/temperature": 0.9,
         "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110), 50 for Pendulum
-        "eps": 0.0#0.01,  # epsilon for exploration
+        "eps": 0.0,#0.01,  # epsilon for exploration
+        "SFT": True
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
@@ -300,7 +301,7 @@ if __name__ == "__main__":
         #     "message_ct": len(agent.current_episode_messages),
         #     "episode_messages": agent.current_episode_messages,
         # }
-        # train_stats = agent.terminate_episode(train=False)
+        train_stats = agent.terminate_episode(train=hyperparams["SFT"])
         # episode_stats.update(train_stats)
         # wandb.log(episode_stats)
         if counter > 0 and counter % int(hyperparams["n_episodes"]%100) == 0:
@@ -314,5 +315,9 @@ if __name__ == "__main__":
         terminals=np.array(terminals),
     )
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'_'+timestamp+'.pkl', 'wb') as file:
+    if hyperparams["SFT"]:
+        is_SFT = "SFT"
+    else:
+        is_SFT = ""
+    with open('data/'+hyperparams["env"].split('-')[0]+'_'+hyperparams["model_name"].split('/')[-1]+'_Neps_'+str(hyperparams['n_episodes'])+'_'+timestamp+is_SFT+'.pkl', 'wb') as file:
         pickle.dump(dataset, file)
