@@ -209,8 +209,8 @@ def get_agent(model, tokenizer, device, hyperparams):
 if __name__ == "__main__":
     hyperparams = {
         # "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
-        # "model_name": "Qwen/QwQ-32B",
-        "model_name": "Qwen/Qwen2.5-7B-Instruct",
+        "model_name": "Qwen/QwQ-32B",
+        # "model_name": "Qwen/Qwen2.5-7B-Instruct",
         "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
@@ -229,7 +229,7 @@ if __name__ == "__main__":
         "generate/temperature": 0.9,
         "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110), 50 for Pendulum
         "eps": 0.0,#0.01,  # epsilon for exploration
-        "SFT": True
+        "SFT": False
     }
     # eps_list = np.linspace(1,0.5,hyperparams["n_episodes"])
     # wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
@@ -275,7 +275,7 @@ if __name__ == "__main__":
                 action = env.action_space.sample()
             else:
                 action = agent.act(observation)
-                print(agent.current_episode_messages)
+                # print(agent.current_episode_messages)
             # wandb.log({"action": action})
             observation, reward, done, info = env.step(action)
             if "Cliff" in hyperparams["env"] or "Frozen" in hyperparams["env"]:
