@@ -5,7 +5,7 @@ import pickle
 from env.atari import register_environments
 
 hyperparams = {
-        "env": "RepresentedPong-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 10,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server

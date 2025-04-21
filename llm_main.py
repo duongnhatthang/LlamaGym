@@ -222,7 +222,7 @@ if __name__ == "__main__":
         "batch_size": 4,
         "seed": 42069,
         "n_episodes": 30,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
-        "generate/max_new_tokens": 8000,
+        "generate/max_new_tokens": 2000,
         "generate/do_sample": True,
         "generate/top_p": 0.6,
         "generate/top_k": 0,
