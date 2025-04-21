@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 import d3rlpy
 import pickle
+from env.atari import register_environments
 
 hyperparams = {
         "env": "RepresentedPong-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
