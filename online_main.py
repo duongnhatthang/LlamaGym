@@ -176,14 +176,14 @@ def online_training(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "CartPole-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", Pendulum-v1, "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "RepresentedPong-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", Pendulum-v1, "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 10,
-        "n_online_eps": 140, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake, 30-570 for Pendulum
+        "n_online_eps": 190, #10-290 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake, 30-570 for Pendulum
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
@@ -245,21 +245,23 @@ if __name__ == "__main__":
     for i in range(hyperparams['n_exp']):
         cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
+    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250420103044.pkl" #Pong
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412171921.pkl" #CliffWalking
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250415095844.pkl" #MountainCar
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250413234248.pkl" #Pendulum
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412075104.pkl" #FrozenLake
-    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250410211529.pkl" #CartPole
+    # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250410211529.pkl" #CartPole
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411000858.pkl" #FrozenLakeBug
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl" #CartPole with Eps
     for i in range(hyperparams['n_exp']):
         cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
+    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250420162547.pkl" #Pong
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250415065446.pkl" #CliffWalking
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250413081613.pkl" #MountainCar
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250414014508.pkl" #Pendulum
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412120230.pkl" #FrozenLake
-    hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412032827.pkl" #CartPole
+    # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412032827.pkl" #CartPole
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411030422.pkl" #FrozenLakeBug
     # hyperparams['data_path'] = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408120007_withEps.pkl" #CartPole with Eps
     for i in range(hyperparams['n_exp']):
