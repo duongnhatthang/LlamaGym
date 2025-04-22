@@ -211,15 +211,15 @@ if __name__ == "__main__":
         # "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
         # "model_name": "Qwen/QwQ-32B",
         "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
+        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", Pendulum-v1, "Taxi-v3", "RepresentedPong-v0"
         "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
         "lora/r": 8,
         "lora/lora_alpha": 16,
         "lora/lora_dropout": 0.05,
         "lora/bias": "none",
         "lora/task_type": "CAUSAL_LM",
-        "load_in_8bit": True,
-        "batch_size": 4,
+        "load_in_8bit": False,
+        "batch_size": 1,
         "seed": 42069,
         "n_episodes": 30,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
         "generate/max_new_tokens": 2000,
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
-        "max_episode_len": 200, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110), 50 for Pendulum
+        "max_episode_len": 4, # 200 for CartPole-v0, 500 for Pong, 200 for MountainCar (optimal 110), 50 for Pendulum
         "eps": 0.0,#0.01,  # epsilon for exploration
         "SFT": True
     }
