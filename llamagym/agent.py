@@ -112,7 +112,10 @@ class Agent(ABC):
         return action
 
     def assign_reward(self, reward):
-        self.current_episode_rewards.append(reward)
+        # self.current_episode_rewards.append(reward)
+
+        # Modified this because I only keep information for 1 frame
+        self.current_episode_rewards = [reward]
 
     def format_episode_for_ppo(self, messages, rewards):
         queries, responses = [], []
