@@ -164,10 +164,6 @@ class Agent(ABC):
             self.current_batch["rewards"].extend(rewards)
 
             if len(self.current_batch["queries"]) >= self.ppo_config.batch_size:
-                # In llamagym/agent.py, before calling self.train_batch
-                print(f"Queries shape: {len(queries)}, Example: {queries[:2]}")
-                print(f"Responses shape: {len(responses)}, Example: {responses[:2]}")
-                print(f"Rewards shape: {len(rewards)}, Example: {rewards}")
                 train_stats = self.train_batch(
                     self.current_batch["queries"],
                     self.current_batch["responses"],
@@ -192,11 +188,6 @@ class Agent(ABC):
         else:
             queries, responses, rewards = batch_queries, batch_responses, batch_rewards
             self.current_batch = {"queries": [], "responses": [], "rewards": []}
-
-        # In llamagym/agent.py, inside train_batch, before calling self.ppo_trainer.step
-        print(f"Queries shape in train_batch: {len(queries)}, Example: {queries[:2]}")
-        print(f"Responses shape in train_batch: {len(responses)}, Example: {responses[:2]}")
-        print(f"Rewards shape in train_batch: {len(rewards)}, Example: {rewards}")
         train_stats = self.ppo_trainer.step(queries, responses, rewards)
         torch.cuda.empty_cache()
 
