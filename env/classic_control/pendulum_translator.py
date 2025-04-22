@@ -36,7 +36,7 @@ class GameDescriber:
                "stabilized within the given time limit. The closer the pendulum is to the upright position, the higher your score."
 
     def describe_action(self):
-        return "Provide a torque value (e.g., a float between -2.0 and 2.0) to control the pendulum's movement. Return the torque value enclosed in [ and ], e.g., [1.5]."
+        return "Provide a torque value (e.g., a float between -2.0 and 2.0) to control the pendulum's movement. Return the torque value enclosed in < and >, e.g., <1.5>."
 
 class TransitionTranslator(ObsTranslator):
     def translate(self, infos, is_current=False):
