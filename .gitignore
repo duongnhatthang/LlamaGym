@@ -15,3 +15,5 @@ d3rlpy_logs/*/time_inference.csv
 d3rlpy_logs/*/time_sample_batch.csv
 d3rlpy_logs/*/time_step.csv
 data/*.zip
+data/old/
+full_results/
