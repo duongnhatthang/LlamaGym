@@ -220,14 +220,18 @@ if __name__ == "__main__":
 
     cache = {}
 
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-        pretrain_32b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'rb') as file:
         pretrain_7b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-        pretrain_32b_3000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'rb') as file:
         pretrain_7b_3000_dqn = pickle.load(file)
+    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    #     pretrain_32b_1000_dqn = pickle.load(file)
+    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    #     pretrain_7b_1000_dqn = pickle.load(file)
+    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    #     pretrain_32b_3000_dqn = pickle.load(file)
+    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
+    #     pretrain_7b_3000_dqn = pickle.load(file)
     # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
     #     pretrain_32b_1000_dqn = pickle.load(file)
     # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
@@ -242,12 +246,12 @@ if __name__ == "__main__":
     hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
     for i in range(hyperparams['n_exp']):
         cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
     for i in range(hyperparams['n_exp']):
         cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
+    # for i in range(hyperparams['n_exp']):
+    #     cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
 
     hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
     # for i in range(hyperparams['n_exp']):
@@ -277,6 +281,7 @@ if __name__ == "__main__":
     # for i in range(hyperparams['n_exp']):
     #     cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
-    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
+    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'wb') as file:
+    # with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
     # with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
         pickle.dump(cache, file)
