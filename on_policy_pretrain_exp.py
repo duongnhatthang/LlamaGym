@@ -116,7 +116,7 @@ def online_training_rand(
         count = 0
         while not done:
             if "Pendulum" in hyperparams["env"]:
-                action = np.random.uniform(-2, 2) #Bug when using env.action_space.sample()
+                action = np.array([np.random.uniform(-2, 2)]) #Bug when using env.action_space.sample()
             else:
                 action = env.action_space.sample()
             observation, reward, done, _, info = env.step(action)
