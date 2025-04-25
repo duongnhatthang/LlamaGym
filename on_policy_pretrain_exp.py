@@ -115,7 +115,10 @@ def online_training_rand(
         eps_reward = 0
         count = 0
         while not done:
-            action = env.action_space.sample()
+            if "Pendulum" in hyperparams["env"]:
+                action = np.random.uniform(-2, 2) #Bug when using env.action_space.sample()
+            else:
+                action = env.action_space.sample()
             observation, reward, done, _, info = env.step(action)
             if count >= hyperparams["max_episode_len"]:
                 done = True
@@ -157,14 +160,14 @@ def online_training_rand(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "Pendulum-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
-        "n_episodes": 150,#5000,
+        "n_episodes": 200,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 30,
-        "n_online_eps": 120, #10-5990 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
+        "n_online_eps": 170, #10-5990 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',
