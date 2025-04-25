@@ -75,11 +75,91 @@ def online_training_split(
         rewards.append(r)
     return rewards
 
+def online_training_rand(
+    env,
+    eval_env,
+    hyperparams,
+    explorer=None
+):
+    """
+    Same as online_training_split, but with random actions for the first n_pretrain_eps episodes.
+    """
+    if isinstance(env.action_space, gym.spaces.Box):  # Continuous action space
+        algo_config = d3rlpy.algos.SACConfig(
+            batch_size=hyperparams['batch_size'],
+            # learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            # target_update_interval=hyperparams['target_update_interval']
+        )
+    else:  # Discrete action space
+        algo_config = d3rlpy.algos.DoubleDQNConfig(
+            batch_size=hyperparams['batch_size'],
+            learning_rate=hyperparams['learning_rate'],
+            gamma=hyperparams['gamma'],
+            target_update_interval=hyperparams['target_update_interval']
+        )
+    dqn = algo_config.create(device=hyperparams['gpu'])
+
+    # Initialize empty FIFO buffer
+    buffer = d3rlpy.dataset.ReplayBuffer(
+        buffer=d3rlpy.dataset.FIFOBuffer(limit=hyperparams['buffer_size']),
+        env=env,
+    )
+
+    rewards = []
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    observations, actions, pretrain_rewards, terminals = [], [], [], []
+    for _ in range(hyperparams["n_pretrain_eps"]):
+        env.reset()
+        done = False
+        eps_reward = 0
+        count = 0
+        while not done:
+            action = env.action_space.sample()
+            observation, reward, done, info = env.step(action)
+            if count >= hyperparams["max_episode_len"]:
+                done = True
+            observations.append(observation)
+            actions.append(action)
+            pretrain_rewards.append(reward)
+            terminals.append(int(done))
+            eps_reward += reward
+        rewards.append(eps_reward)
+    pretrain_dataset = d3rlpy.dataset.MDPDataset(
+        observations=np.array(observations),
+        actions=np.array(actions),
+        rewards=np.array(pretrain_rewards),
+        terminals=np.array(terminals),
+    )
+    for episode in pretrain_dataset.episodes:
+        if len(episode) > 0 and hasattr(episode, 'rewards'):
+            buffer.append_episode(episode)
+        else:
+            print(f"Skipping invalid episode: {episode}")
+
+    dqn.fit(buffer, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+
+    for _ in trange(hyperparams['n_online_eps']):
+        dqn.fit_online(
+            env=env,
+            buffer=buffer,
+            explorer=explorer,
+            n_steps=hyperparams['max_episode_len'],
+            experiment_name=f"{timestamp}_online_training",
+        )
+        if hyperparams['env'] == "CliffWalking-v0":
+            r=evaluate_qlearning_with_environment(dqn, eval_env, hyperparams["max_episode_len"])
+        else:
+            env_evaluator = EnvironmentEvaluator(env, n_trials=1)
+            r = env_evaluator(dqn, dataset=None)
+        rewards.append(r)
+    return rewards
+
 if __name__ == "__main__":
     hyperparams = {
-        "env": "RepresentedPong-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
-        "n_episodes": 200,#5000,
+        "n_episodes": 150,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
@@ -123,7 +203,8 @@ if __name__ == "__main__":
         hyperparams["n_pretrain_eps"]=n_pretrain_eps
         hyperparams["n_online_eps"]=hyperparams["n_episodes"]-hyperparams["n_pretrain_eps"]
         for i in range(hyperparams['n_exp']):
-            cache[f'pretrain_{hyperparams["n_pretrain_eps"]}_eps_{hyperparams["n_pretrain_steps"]}_steps_{i}'] = online_training_split(env, eval_env, hyperparams, explorer)
+            cache[f'pretrain_{hyperparams["n_pretrain_eps"]}_eps_{hyperparams["n_pretrain_steps"]}_steps_{i}_rand'] = online_training_rand(env, eval_env, hyperparams, explorer)
+            # cache[f'pretrain_{hyperparams["n_pretrain_eps"]}_eps_{hyperparams["n_pretrain_steps"]}_steps_{i}'] = online_training_split(env, eval_env, hyperparams, explorer)
         return cache
     cache = run_exp(1000, 30, cache, env, eval_env, hyperparams, explorer)
     cache = run_exp(1000, 20, cache, env, eval_env, hyperparams, explorer)
