@@ -127,6 +127,8 @@ def online_training_rand(
             pretrain_rewards.append(reward)
             terminals.append(int(done))
             eps_reward += reward
+            count += 1
+            print(f"Step: {count}, Action: {action}, Reward: {reward}, Done: {done}, Info: {info}")
         rewards.append(eps_reward)
     pretrain_dataset = d3rlpy.dataset.MDPDataset(
         observations=np.array(observations),
