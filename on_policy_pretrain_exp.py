@@ -115,10 +115,7 @@ def online_training_rand(
         eps_reward = 0
         count = 0
         while not done:
-            if "Pendulum" in hyperparams["env"]:
-                action = np.array([np.random.uniform(-2, 2)]) #Bug when using env.action_space.sample()
-            else:
-                action = env.action_space.sample()
+            action = env.action_space.sample()
             observation, reward, done, _, info = env.step(action)
             if count >= hyperparams["max_episode_len"]:
                 done = True
@@ -128,7 +125,6 @@ def online_training_rand(
             terminals.append(int(done))
             eps_reward += reward
             count += 1
-            print(f"Step: {count}, Action: {action}, Reward: {reward}, Done: {done}, Info: {info}")
         rewards.append(eps_reward)
     pretrain_dataset = d3rlpy.dataset.MDPDataset(
         observations=np.array(observations),
