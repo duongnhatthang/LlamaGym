@@ -116,7 +116,7 @@ def online_training_rand(
         count = 0
         while not done:
             action = env.action_space.sample()
-            observation, reward, done, info = env.step(action)
+            observation, reward, done, _, info = env.step(action)
             if count >= hyperparams["max_episode_len"]:
                 done = True
             observations.append(observation)
