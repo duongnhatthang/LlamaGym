@@ -213,5 +213,6 @@ if __name__ == "__main__":
     cache = run_exp(3000, 20, cache, env, eval_env, hyperparams, explorer)
     cache = run_exp(3000, 10, cache, env, eval_env, hyperparams, explorer)
 
-    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_on_policy_pretrain_exp.pkl', 'wb') as file:
+    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_on_policy_pretrain_exp_rand.pkl', 'wb') as file:
+    # with open(f'data/cache_{hyperparams["env"].split("-")[0]}_on_policy_pretrain_exp.pkl', 'wb') as file:
         pickle.dump(cache, file)
