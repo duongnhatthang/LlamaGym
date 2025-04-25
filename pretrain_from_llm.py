@@ -5,7 +5,7 @@ import pickle
 from env.atari import register_environments
 
 hyperparams = {
-        "env": "CliffWalking-v0", #"CartPole-v0", # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "Pendulum-v1", #"CartPole-v0", Pendulum-v1, # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 10,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
@@ -80,8 +80,8 @@ if __name__ == "__main__":
     # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
     #     Qwen_32B_dataset = pickle.load(file)
 
-    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250421175530SFT.pkl", 'rb') as file: #CliffWalking SFT
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250422210707SFT.pkl", 'rb') as file: #Pendulum SFT
+    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250421175530SFT.pkl", 'rb') as file: #CliffWalking SFT
+    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250422210707SFT.pkl", 'rb') as file: #Pendulum SFT
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250421120400SFT.pkl", 'rb') as file: #FrozenLake SFT
     # with open(f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-7B_Neps_30_20250419172821.pkl", 'rb') as file: #FrozenLake DS7b
     # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250420103044.pkl", 'rb') as file: #Pong
