@@ -218,7 +218,7 @@ if __name__ == "__main__":
         "lora/lora_dropout": 0.05,
         "lora/bias": "none",
         "lora/task_type": "CAUSAL_LM",
-        "load_in_8bit": False,
+        "load_in_8bit": True,
         "batch_size": 1,
         "seed": 42069,
         "n_episodes": 30,#5000, #CartPole: 50m for 1 eps (length 39) for 32B, 36m (31 steps) for 7B, 15-25 steps for rand. Pong: 5.5h for 1 episode (500 length) on 7B with CoT, 9h for 32B
