@@ -158,14 +158,14 @@ def online_training_rand(
 
 if __name__ == "__main__":
     hyperparams = {
-        "env": "RepresentedPong-v0", #"CartPole-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "RepresentedPong-v0"
         "seed": 42069,
-        "n_episodes": 300,#5000,
+        "n_episodes": 150,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
         "eps": 0.1,  # epsilon for exploration
         "n_exp": 5,
         "n_pretrain_eps": 30,
-        "n_online_eps": 270, #10-5990 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
+        "n_online_eps": 120, #10-5990 for mountainCar, 30-120 for CartPole, 30-120 for FrozenLake
         "gpu": True, # True if use GPU to train with d3rlpy
         "buffer_size": 100000, #Test with 100k, 200k, 500k. 1M might be too much
         "data_path": None,#'data/CartPole_Qwen2.5-7B-Instruct_Neps_10_20250406040150.pkl',

@@ -2,10 +2,42 @@ import gymnasium as gym
 import numpy as np
 import d3rlpy
 import pickle
-from env.atari import register_environments
+
+def get_llm_data_paths(env):
+    env_name = env.split("-")[0]
+    if env_name == "Pendulum":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250413234248.pkl"
+    elif env_name == "CliffWalking":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412171921.pkl" #CliffWalkingTypo
+    elif env_name == "FrozenLake":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412075104.pkl" #FrozenLakeTypo
+        path_7b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411000858B.pkl" #FrozenLake bad env hist
+    elif env_name == "CartPole":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250410211529.pkl"
+        # path_7b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl" #CartPole with Eps
+    elif env_name == "MountainCar":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250415095844.pkl"
+    elif env_name == "RepresentedPong":
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250420103044.pkl"
+
+    if env_name == "Pendulum":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250414014508.pkl"
+    elif env_name == "CliffWalking":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250415065446.pkl" #CliffWalkingTypo
+    elif env_name == "FrozenLake":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412120230.pkl" #FrozenLakeTypo
+        # path_32b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411030422B.pkl" #FrozenLake bad env hist
+    elif env_name == "CartPole":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412032827.pkl"
+        # path_32b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408120007_withEps.pkl" #CartPole with Eps
+    elif env_name == "MountainCar":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250413081613.pkl"
+    elif env_name == "RepresentedPong":
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250420162547.pkl"
+    return path_7b, path_32b
 
 hyperparams = {
-        "env": "Pendulum-v1", #"CartPole-v0", Pendulum-v1, # "Acrobot-v0", "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "Taxi-v3", "RepresentedPong-v0"
+        "env": "FrozenLake-v1", #"CartPole-v0", Pendulum-v1, "MountainCar-v0", "FrozenLake-v1", "CliffWalking-v0", "RepresentedPong-v0"
         "seed": 42069,
         "n_episodes": 10,#5000,
         "max_episode_len": 200, # Around 10h per 100k steps in Leviathan server
@@ -56,45 +88,18 @@ if __name__ == "__main__":
     n_exp = hyperparams["n_exp"]
     hyperparams["target_update_interval"] = 200 # For pretraining, leave the original value of 1000 for online training
 
-    # # d3rlpy supports both Gym and Gymnasium
-    # if "Represented" in hyperparams["env"]:
-    #     env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-    #     eval_env = GymCompatWrapper2(gym.make(hyperparams["env"]))
-    # else:
-    #     env = gym.make(hyperparams["env"])
-    #     eval_env = gym.make(hyperparams["env"])
-
     # fix seed
     d3rlpy.seed(hyperparams["seed"])
-    # d3rlpy.envs.seed_env(env, hyperparams["seed"])
-    # d3rlpy.envs.seed_env(eval_env, hyperparams["seed"])
 
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-14B_Neps_30_20250422000525.pkl", 'rb') as file: #FrozenLake DS14b
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250420162547.pkl", 'rb') as file: #Pong
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250415065446.pkl", 'rb') as file: #CliffWalking
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250413081613.pkl", 'rb') as file: #MountainCar
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250414014508.pkl", 'rb') as file: #Pendulum
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412120230.pkl", 'rb') as file: #FrozenLake
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250412032827.pkl", 'rb') as file: #CartPole
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422.pkl", 'rb') as file: #FrozenLakeBug
-    # # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250409124533.pkl", 'rb') as file: #CartPole with Eps
-    #     Qwen_32B_dataset = pickle.load(file)
+    path_7b, path_32b = get_llm_data_paths(hyperparams["env"])
 
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250421175530SFT.pkl", 'rb') as file: #CliffWalking SFT
-    with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250422210707SFT.pkl", 'rb') as file: #Pendulum SFT
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250421120400SFT.pkl", 'rb') as file: #FrozenLake SFT
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-7B_Neps_30_20250419172821.pkl", 'rb') as file: #FrozenLake DS7b
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250420103044.pkl", 'rb') as file: #Pong
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412171921.pkl", 'rb') as file: #CliffWalking
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250415095844.pkl", 'rb') as file: #MountainCar
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250413234248.pkl", 'rb') as file: #Pendulum
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250412075104.pkl", 'rb') as file: #FrozenLake
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250410211529.pkl", 'rb') as file: #CartPole
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250411000858.pkl", 'rb') as file: #FrozenLakeBug
-    # with open(f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_30_20250409023954.pkl", 'rb') as file: #CartPole with Eps
+    with open(path_7b, 'rb') as file:
         Qwen_7B_dataset = pickle.load(file)
+    with open(path_32b, 'rb') as file:
+        Qwen_32B_dataset = pickle.load(file)
 
-    # Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
+    # Create the new dataset with the specified number of episodes
+    Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
     Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
 
     # Determine the algorithm based on the action space
@@ -123,12 +128,12 @@ if __name__ == "__main__":
 
     # start offline training
     pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'wb') as file:
+    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'wb') as file:
     # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
         pickle.dump(pretrain_7b_dqn, file)
 
-    # pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+    pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
     # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
-    # # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
-    #     pickle.dump(pretrain_32b_dqn, file)
+    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
+        pickle.dump(pretrain_32b_dqn, file)
