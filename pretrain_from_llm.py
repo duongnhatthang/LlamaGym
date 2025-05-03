@@ -30,6 +30,7 @@ def get_llm_data_paths(env):
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250415065446.pkl" #CliffWalkingTypo
     elif env_name == "FrozenLake":
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250429223843.pkl" #FrozenLake
+        # path_32b = None #For the SFT experiment
         # path_32b = f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-14B_Neps_30_20250502084016.pkl" #FrozenLake DS 14b
         # path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250412120230.pkl" #FrozenLakeTypo
         # path_32b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_30_20250411030422B.pkl" #FrozenLake bad env hist
@@ -98,48 +99,55 @@ if __name__ == "__main__":
     d3rlpy.seed(hyperparams["seed"])
 
     path_7b, path_32b = get_llm_data_paths(hyperparams["env"])
+    suffix = ''
+    if "SFT" in path_7b:
+        suffix = 'SFT'
+    elif "DS" in path_7b:
+        suffix = 'DS'
+    if path_7b is not None:
+        with open(path_7b, 'rb') as file:
+            Qwen_7B_dataset = pickle.load(file)
+        Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
 
-    with open(path_7b, 'rb') as file:
-        Qwen_7B_dataset = pickle.load(file)
-    with open(path_32b, 'rb') as file:
-        Qwen_32B_dataset = pickle.load(file)
+        # Determine the algorithm based on the action space
+        if isinstance(gym.make(hyperparams["env"]).action_space, gym.spaces.Box):  # Continuous action space
+            pretrain_7b_dqn = d3rlpy.algos.SACConfig(
+                batch_size=hyperparams['batch_size'],
+                gamma=hyperparams['gamma'],
+                ).create(device=hyperparams['gpu'])
+        else:  # Discrete action space
+            pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
+                batch_size=hyperparams['batch_size'],
+                learning_rate=hyperparams['learning_rate'],
+                gamma=hyperparams['gamma'],
+                target_update_interval=hyperparams['target_update_interval']
+                ).create(device=hyperparams['gpu'])
+        # start offline training
+        pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'wb') as file:
+            pickle.dump(pretrain_7b_dqn, file)
+    if path_32b is not None:
+        with open(path_32b, 'rb') as file:
+            Qwen_32B_dataset = pickle.load(file)
 
-    # Create the new dataset with the specified number of episodes
-    Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
-    Qwen_7B_dataset_new = get_new_dataset(Qwen_7B_dataset, n_pretrain_eps)
+        # Create the new dataset with the specified number of episodes
+        Qwen_32B_dataset_new = get_new_dataset(Qwen_32B_dataset, n_pretrain_eps)
 
-    # Determine the algorithm based on the action space
-    if isinstance(gym.make(hyperparams["env"]).action_space, gym.spaces.Box):  # Continuous action space
-        pretrain_7b_dqn = d3rlpy.algos.SACConfig(
-            batch_size=hyperparams['batch_size'],
-            gamma=hyperparams['gamma'],
-            ).create(device=hyperparams['gpu'])
-        pretrain_32b_dqn = d3rlpy.algos.SACConfig(
-            batch_size=hyperparams['batch_size'],
-            gamma=hyperparams['gamma'],
-            ).create(device=hyperparams['gpu'])
-    else:  # Discrete action space
-        pretrain_7b_dqn = d3rlpy.algos.DoubleDQNConfig(
-            batch_size=hyperparams['batch_size'],
-            learning_rate=hyperparams['learning_rate'],
-            gamma=hyperparams['gamma'],
-            target_update_interval=hyperparams['target_update_interval']
-            ).create(device=hyperparams['gpu'])
-        pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
-            batch_size=hyperparams['batch_size'], 
-            learning_rate=hyperparams['learning_rate'],
-            gamma=hyperparams['gamma'],
-            target_update_interval=hyperparams['target_update_interval']
-            ).create(device=hyperparams['gpu'])
+        # Determine the algorithm based on the action space
+        if isinstance(gym.make(hyperparams["env"]).action_space, gym.spaces.Box):  # Continuous action space
+            pretrain_32b_dqn = d3rlpy.algos.SACConfig(
+                batch_size=hyperparams['batch_size'],
+                gamma=hyperparams['gamma'],
+                ).create(device=hyperparams['gpu'])
+        else:  # Discrete action space
+            pretrain_32b_dqn = d3rlpy.algos.DoubleDQNConfig(
+                batch_size=hyperparams['batch_size'], 
+                learning_rate=hyperparams['learning_rate'],
+                gamma=hyperparams['gamma'],
+                target_update_interval=hyperparams['target_update_interval']
+                ).create(device=hyperparams['gpu'])
 
-    # start offline training
-    pretrain_7b_dqn.fit(Qwen_7B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'wb') as file:
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
-        pickle.dump(pretrain_7b_dqn, file)
-
-    pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
-        pickle.dump(pretrain_32b_dqn, file)
+        # start offline training
+        pretrain_32b_dqn.fit(Qwen_32B_dataset_new, n_steps=hyperparams["n_pretrain_steps"], n_steps_per_epoch=hyperparams['n_steps_per_epoch'])
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_{hyperparams["n_pretrain_steps"]}_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'wb') as file:
+            pickle.dump(pretrain_32b_dqn, file)

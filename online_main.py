@@ -35,7 +35,7 @@ def evaluate_qlearning_with_environment(
     """
     From d3rlpy.metrics.EnvironmentEvaluator
     Modified because the original code bugged out on CliffWalking-v0. The episode never end.
-    
+
     Returns average environment score.
 
     .. code-block:: python
@@ -217,58 +217,63 @@ if __name__ == "__main__":
     #     end_epsilon=0.1,
     #     duration=5000,
     # )
+    path_7b, path_32b = get_llm_data_paths(hyperparams["env"])
+    suffix = ''
+    if "SFT" in path_7b:
+        suffix = 'SFT'
+    elif "DS" in path_7b:
+        suffix = 'DS'
 
     cache = {}
+    if path_32b is not None:
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'rb') as file:
+            pretrain_32b_1000_dqn = pickle.load(file)
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'rb') as file:
+            pretrain_32b_3000_dqn = pickle.load(file)
+        
+        tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
+        hyperparams['data_path'] =  None
+        hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
+        for i in range(hyperparams['n_exp']):
+            cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
+        for i in range(hyperparams['n_exp']):
+            cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
 
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'rb') as file:
-    #     pretrain_7b_1000_dqn = pickle.load(file)
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'rb') as file:
-    #     pretrain_7b_3000_dqn = pickle.load(file)
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-    #     pretrain_32b_1000_dqn = pickle.load(file)
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-    #     pretrain_7b_1000_dqn = pickle.load(file)
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-    #     pretrain_32b_3000_dqn = pickle.load(file)
-    # with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'rb') as file:
-    #     pretrain_7b_3000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
-        pretrain_32b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
-        pretrain_7b_1000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
-        pretrain_32b_3000_dqn = pickle.load(file)
-    with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}.pkl', 'rb') as file:
-        pretrain_7b_3000_dqn = pickle.load(file)
-
-    tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
-    hyperparams['data_path'] =  None
-    hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_1000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
-    for i in range(hyperparams['n_exp']):
-        cache[f'pretrain_32b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_32b_3000_dqn)
-
-    hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
-    for i in range(hyperparams['n_exp']):
-        cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+        hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
+        for i in range(hyperparams['n_exp']):
+            cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
 
-    path_7b, path_32b = get_llm_data_paths(hyperparams["env"])
-    # Mixed pretraining and online data. finetune is a lagacy name.
-    hyperparams['data_path'] = path_7b
-    for i in range(hyperparams['n_exp']):
-        cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+        # Mixed pretraining and online data. finetune is a lagacy name.
+        hyperparams['data_path'] = path_32b
+        for i in range(hyperparams['n_exp']):
+            cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
 
-    hyperparams['data_path'] = path_32b
-    for i in range(hyperparams['n_exp']):
-        cache[f'finetune_32b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+    if path_7b is not None:
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_1000_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'rb') as file:
+            pretrain_7b_1000_dqn = pickle.load(file)
+        with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_7b_3000_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'rb') as file:
+            pretrain_7b_3000_dqn = pickle.load(file)
 
-    # with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}SFT.pkl', 'wb') as file:
-    # with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}DS.pkl', 'wb') as file:
-    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}.pkl', 'wb') as file:
+        tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
+        hyperparams['data_path'] =  None
+        hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
+        for i in range(hyperparams['n_exp']):
+            cache[f'pretrain_7b_1000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_1000_dqn)
+        for i in range(hyperparams['n_exp']):
+            cache[f'pretrain_7b_3000_{i}'] = online_training(env, eval_env, hyperparams, explorer, pretrain_7b_3000_dqn)
+
+        hyperparams['n_pretrain_eps'] = tmp_n_pretrain_eps # restore n_pretrain_eps for subsequent runs
+        if 'online_0' not in cache.keys():
+            # Only run online training if it hasn't been done before
+            for i in range(hyperparams['n_exp']):
+                cache[f'online_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+
+
+        # Mixed pretraining and online data. finetune is a lagacy name.
+        hyperparams['data_path'] = path_7b
+        for i in range(hyperparams['n_exp']):
+            cache[f'finetune_7b_{i}'] = online_training(env, eval_env, hyperparams, explorer)
+
+    with open(f'data/cache_{hyperparams["env"].split("-")[0]}_Neps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'wb') as file:
         pickle.dump(cache, file)
