@@ -8,10 +8,14 @@ def get_llm_data_paths(env):
     if env_name == "Pendulum":
         path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250413234248.pkl"
     elif env_name == "CliffWalking":
-        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412171921.pkl" #CliffWalkingTypo
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250502104658.pkl" #CliffWalking
+        # path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412171921.pkl" #CliffWalking Typo
     elif env_name == "FrozenLake":
-        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412075104.pkl" #FrozenLakeTypo
-        path_7b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411000858B.pkl" #FrozenLake bad env hist
+        path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250430010558.pkl" #FrozenLake
+        # path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250501013018SFT.pkl" #FrozenLake SFT
+        # path_7b = f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-7B_Neps_{hyperparams['n_pretrain_eps']}_20250502071148.pkl" #FrozenLake DS 7b
+        # path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412075104.pkl" #FrozenLakeTypo
+        # path_7b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411000858B.pkl" #FrozenLake bad env hist
     elif env_name == "CartPole":
         path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250410211529.pkl"
         # path_7b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-7B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250408032240_withEps.pkl" #CartPole with Eps
@@ -25,7 +29,9 @@ def get_llm_data_paths(env):
     elif env_name == "CliffWalking":
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250415065446.pkl" #CliffWalkingTypo
     elif env_name == "FrozenLake":
-        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412120230.pkl" #FrozenLakeTypo
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250429223843.pkl" #FrozenLake
+        # path_32b = f"data/{hyperparams['env'].split('-')[0]}_DeepSeek-R1-Distill-Qwen-14B_Neps_{hyperparams['n_pretrain_eps']}_20250502084016.pkl" #FrozenLake DS 14b
+        # path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412120230.pkl" #FrozenLakeTypo
         # path_32b = f"data/{hyperparams['env'].split('-')[0]}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250411030422B.pkl" #FrozenLake bad env hist
     elif env_name == "CartPole":
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_{hyperparams['n_pretrain_eps']}_20250412032827.pkl"
