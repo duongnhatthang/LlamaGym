@@ -230,7 +230,7 @@ if __name__ == "__main__":
             pretrain_32b_1000_dqn = pickle.load(file)
         with open(f'models/{hyperparams["env"].split("-")[0]}_ddqn_pretrain_32b_3000_steps_{hyperparams["n_pretrain_eps"]}{suffix}.pkl', 'rb') as file:
             pretrain_32b_3000_dqn = pickle.load(file)
-        
+
         tmp_n_pretrain_eps = hyperparams['n_pretrain_eps']
         hyperparams['data_path'] =  None
         hyperparams['n_pretrain_eps'] = 0 # Set to 0 to avoid pretraining when using pre-trained models
