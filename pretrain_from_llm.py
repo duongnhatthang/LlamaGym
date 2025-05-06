@@ -9,6 +9,7 @@ def get_llm_data_paths(env):
         path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_30_20250413234248.pkl"
     elif env_name == "CliffWalking":
         path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_30_20250502104658.pkl" #CliffWalking
+        # path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_30_20250505135458SFT.pkl" #CliffWalking SFT
         # path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_30_20250412171921.pkl" #CliffWalking Typo
     elif env_name == "FrozenLake":
         path_7b = f"data/{env_name}_Qwen2.5-7B-Instruct_Neps_30_20250430010558.pkl" #FrozenLake
@@ -27,7 +28,9 @@ def get_llm_data_paths(env):
     if env_name == "Pendulum":
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250414014508.pkl"
     elif env_name == "CliffWalking":
-        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250415065446.pkl" #CliffWalkingTypo
+        path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250506015247.pkl" #CliffWalking
+        # path_32b = None #For the SFT experiment
+        # path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250415065446.pkl" #CliffWalkingTypo
     elif env_name == "FrozenLake":
         path_32b = f"data/{env_name}_Qwen2.5-32B-Instruct_Neps_30_20250429223843.pkl" #FrozenLake
         # path_32b = None #For the SFT experiment
