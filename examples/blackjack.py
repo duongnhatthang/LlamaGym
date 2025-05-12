@@ -42,14 +42,22 @@ if __name__ == "__main__":
         "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         # "model_name": "meta-llama/Llama-2-7b-chat-hf",
         "env": "Blackjack-v1",
-        "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
+        "lora/target_modules": [
+            "q_proj",
+            "up_proj",
+            "o_proj",
+            "k_proj",
+            "down_proj",
+            "gate_proj",
+            "v_proj",
+        ],
         "lora/r": 8,
         "lora/lora_alpha": 16,
         "lora/lora_dropout": 0.05,
         "lora/bias": "none",
         "lora/task_type": "CAUSAL_LM",
-        "load_in_8bit": False,
-        "batch_size": 1,
+        "load_in_8bit": True,
+        "batch_size": 4,
         "seed": 42069,
         "episodes": 5000,
         "generate/max_new_tokens": 32,
@@ -57,9 +65,10 @@ if __name__ == "__main__":
         "generate/top_p": 0.6,
         "generate/top_k": 0,
         "generate/temperature": 0.9,
+        "eps": 0.3,  # epsilon for exploration
     }
     wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT"), config=hyperparams)
-    device = "cuda"
+    device = "cuda:0"
     HF_TOKEN = os.environ.get("HF_TOKEN")
 
     lora_config = LoraConfig(
@@ -100,7 +109,11 @@ if __name__ == "__main__":
         done = False
 
         while not done:
-            action = agent.act(observation)
+            rand = bool(np.random.binomial(n=1, p=hyperparams["eps"]))
+            if rand:
+                action = env.action_space.sample()
+            else:
+                action = agent.act(observation)
             wandb.log({"action": action})
             observation, reward, terminated, truncated, info = env.step(action)
             agent.assign_reward(reward)
@@ -126,5 +139,8 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open(hyperparams["model_name"]+'_eps_'+str(hyperparams['num_episodes'])+'.pkl', 'wb') as file:
+    with open(
+        hyperparams["model_name"] + "_eps_" + str(hyperparams["episodes"]) + ".pkl",
+        "wb",
+    ) as file:
         pickle.dump(dataset, file)

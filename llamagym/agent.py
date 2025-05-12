@@ -8,6 +8,28 @@ from trl import (
     PPOConfig,
     create_reference_model,
 )
+from copy import deepcopy
+
+
+def custom_create_reference_model(model):
+    # Deep copy the model
+    ref_model = deepcopy(model)
+
+    # Fix hooks with None values
+    for module in ref_model.modules():
+        if hasattr(module, "_forward_pre_hooks"):
+            for hook_id, hook in module._forward_pre_hooks.items():
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
+                    module._forward_pre_hooks[hook_id].extra_dict_ref = tuple()
+        if hasattr(module, "_forward_hooks"):
+            for hook_id, hook in module._forward_hooks.items():
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
+                    module._forward_hooks[hook_id].extra_dict_ref = tuple()
+        if hasattr(module, "_backward_hooks"):
+            for hook_id, hook in module._backward_hooks.items():
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
+                    module._backward_hooks[hook_id].extra_dict_ref = tuple()
+    return ref_model
 
 
 class Agent(ABC):
@@ -29,9 +51,13 @@ class Agent(ABC):
         self.tokenizer = tokenizer
         self.device = device
         self.generate_config_dict = generate_config_dict
-        self.model_ref = create_reference_model(model)
-        self.ppo_config = PPOConfig(**ppo_config_dict)
-        self.ppo_trainer = PPOTrainer(self.ppo_config, model, self.model_ref, tokenizer)
+        # try:
+        #     self.model_ref = create_reference_model(model)
+        # except Exception as e:
+        #     print(f"Error creating reference model: {e}")
+        #     self.model_ref = custom_create_reference_model(model)
+        # self.ppo_config = PPOConfig(**ppo_config_dict)
+        # self.ppo_trainer = PPOTrainer(self.ppo_config, model, self.model_ref, tokenizer)
 
         self.current_batch = {"queries": [], "responses": [], "rewards": []}
 
@@ -59,7 +85,6 @@ class Agent(ABC):
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         generate_ids = self.model.generate(
             inputs=inputs.input_ids,
@@ -71,8 +96,8 @@ class Agent(ABC):
         outputs = self.tokenizer.batch_decode(
             generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
-
         response = outputs[0].split("[/INST]")[-1].strip()
+
         return response
 
     def act(self, observation):
@@ -89,7 +114,10 @@ class Agent(ABC):
         return action
 
     def assign_reward(self, reward):
-        self.current_episode_rewards.append(reward)
+        # self.current_episode_rewards.append(reward)
+
+        # Modified this because I only keep information for 1 frame
+        self.current_episode_rewards = [reward]
 
     def format_episode_for_ppo(self, messages, rewards):
         queries, responses = [], []
@@ -162,7 +190,6 @@ class Agent(ABC):
         else:
             queries, responses, rewards = batch_queries, batch_responses, batch_rewards
             self.current_batch = {"queries": [], "responses": [], "rewards": []}
-
         train_stats = self.ppo_trainer.step(queries, responses, rewards)
         torch.cuda.empty_cache()
 
