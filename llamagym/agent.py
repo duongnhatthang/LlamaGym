@@ -10,25 +10,27 @@ from trl import (
 )
 from copy import deepcopy
 
+
 def custom_create_reference_model(model):
     # Deep copy the model
     ref_model = deepcopy(model)
-    
+
     # Fix hooks with None values
     for module in ref_model.modules():
-        if hasattr(module, '_forward_pre_hooks'):
+        if hasattr(module, "_forward_pre_hooks"):
             for hook_id, hook in module._forward_pre_hooks.items():
-                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
                     module._forward_pre_hooks[hook_id].extra_dict_ref = tuple()
-        if hasattr(module, '_forward_hooks'):
+        if hasattr(module, "_forward_hooks"):
             for hook_id, hook in module._forward_hooks.items():
-                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
                     module._forward_hooks[hook_id].extra_dict_ref = tuple()
-        if hasattr(module, '_backward_hooks'):
+        if hasattr(module, "_backward_hooks"):
             for hook_id, hook in module._backward_hooks.items():
-                if hasattr(hook, 'extra_dict_ref') and hook.extra_dict_ref is None:
+                if hasattr(hook, "extra_dict_ref") and hook.extra_dict_ref is None:
                     module._backward_hooks[hook_id].extra_dict_ref = tuple()
     return ref_model
+
 
 class Agent(ABC):
     def __init__(

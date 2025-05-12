@@ -42,7 +42,15 @@ if __name__ == "__main__":
         "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
         # "model_name": "meta-llama/Llama-2-7b-chat-hf",
         "env": "Blackjack-v1",
-        "lora/target_modules": ["q_proj","up_proj","o_proj","k_proj","down_proj","gate_proj","v_proj"],
+        "lora/target_modules": [
+            "q_proj",
+            "up_proj",
+            "o_proj",
+            "k_proj",
+            "down_proj",
+            "gate_proj",
+            "v_proj",
+        ],
         "lora/r": 8,
         "lora/lora_alpha": 16,
         "lora/lora_dropout": 0.05,
@@ -131,5 +139,8 @@ if __name__ == "__main__":
         rewards=np.array(rewards),
         terminals=np.array(terminals),
     )
-    with open(hyperparams["model_name"]+'_eps_'+str(hyperparams['episodes'])+'.pkl', 'wb') as file:
+    with open(
+        hyperparams["model_name"] + "_eps_" + str(hyperparams["episodes"]) + ".pkl",
+        "wb",
+    ) as file:
         pickle.dump(dataset, file)
