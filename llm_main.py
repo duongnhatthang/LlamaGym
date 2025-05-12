@@ -289,9 +289,7 @@ if __name__ == "__main__":
             if n_step >= hyperparams["max_episode_len"]:
                 done = True
             terminals.append(int(done))
-            print(
-                n_step, observation, action, reward
-            )
+            print(n_step, observation, action, reward)
         # episode_stats = {
         #     "episode": episode,
         #     "sum_return": sum(agent.current_episode_rewards),

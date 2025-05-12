@@ -139,6 +139,7 @@ class RepresentedAtariEnv(gym.Wrapper):
     def render(self, render_mode=None):
         return self.env.render()
 
+
 class RepresentedPong(RepresentedAtariEnv):
     def __init__(self, render_mode: Optional[str] = None, frameskip: int = 4):
         env_name = "PongNoFrameskip-v4"
@@ -189,6 +190,7 @@ class RepresentedPong(RepresentedAtariEnv):
         self.observation = obs
         return np.array(list(obs.values())), info
 
+
 class RepresentedSpaceInvaders(RepresentedAtariEnv):
     def __init__(self, render_mode: Optional[str] = None, frameskip: int = 4):
         env_name = "SpaceInvadersNoFrameskip-v4"
@@ -198,6 +200,7 @@ class RepresentedSpaceInvaders(RepresentedAtariEnv):
             frameskip=frameskip,
             repeat_action_probability=0,
         )
+
 
 def env_factory(env_class):
     def _create_instance(render_mode=None, frameskip=4):
