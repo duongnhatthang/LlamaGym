@@ -60,14 +60,4 @@ We investigate the usage of Large Language Model (LLM) in collecting high-qualit
 The code is referencing this [repo](https://github.com/KhoomeiK/LlamaGym). The environment descriptions are referenced from this [repo](https://github.com/mail-ecnu/Text-Gym-Agents).
 
 ## Citation
-```
-@misc{duong2025improvingdataefficiencyreinforcementlearning,
-      title={Improving the Data-efficiency of Reinforcement Learning by Warm-starting with LLM}, 
-      author={Thang Duong and Minglai Yang and Chicheng Zhang},
-      year={2025},
-      eprint={2505.10861},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2505.10861}, 
-}
-```
+Placeholder
